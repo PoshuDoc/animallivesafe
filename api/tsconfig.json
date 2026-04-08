@@ -15,7 +15,7 @@
     }
   },
   "include": [
-    "./index.ts",
+    "./_source.ts",
     "../artifacts/api-server/src/**/*.ts",
     "../lib/db/src/**/*.ts"
   ]
