@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, doctorsTable, appointmentsTable } from "@workspace/db";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import type { JwtPayload } from "../middlewares/auth";
 import type { Request } from "express";
@@ -11,7 +11,10 @@ const router = Router();
 function formatAppointment(
   appt: typeof appointmentsTable.$inferSelect,
   farmerName: string,
-  doctorName: string
+  doctorName: string,
+  consultationFee: number = 0,
+  doctorDistrict: string = "",
+  specialties: string[] = [],
 ) {
   return {
     id: appt.id,
@@ -19,6 +22,9 @@ function formatAppointment(
     doctorId: appt.doctorId,
     farmerName,
     doctorName,
+    consultationFee,
+    doctorDistrict,
+    specialties,
     animalType: appt.animalType,
     animalDescription: appt.animalDescription,
     appointmentDate: appt.appointmentDate,
@@ -29,18 +35,26 @@ function formatAppointment(
   };
 }
 
+async function enrichAppointment(appt: typeof appointmentsTable.$inferSelect) {
+  const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, appt.farmerId)).limit(1);
+  const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, appt.doctorId)).limit(1);
+  const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
+  return formatAppointment(
+    appt,
+    farmer?.name ?? "Unknown",
+    doctorUser?.name ?? "Unknown",
+    doctor?.consultationFee ?? 0,
+    doctor?.district ?? "",
+    doctor?.specialties ?? [],
+  );
+}
+
 router.get("/appointments", requireAuth, async (req, res) => {
   const { userId, role } = (req as Request & { user: JwtPayload }).user;
   const { status } = req.query as { status?: string };
 
   try {
-    let query = db
-      .select()
-      .from(appointmentsTable)
-      .leftJoin(usersTable, eq(appointmentsTable.farmerId, usersTable.id))
-      .leftJoin(doctorsTable, eq(appointmentsTable.doctorId, doctorsTable.id));
-
-    let results;
+    let results: (typeof appointmentsTable.$inferSelect)[];
     if (role === "farmer") {
       results = await db
         .select()
@@ -51,7 +65,7 @@ router.get("/appointments", requireAuth, async (req, res) => {
     } else if (role === "doctor") {
       const [doctorRow] = await db.select().from(doctorsTable).where(eq(doctorsTable.userId, userId)).limit(1);
       if (!doctorRow) {
-        res.json([]);
+        res.json({ appointments: [] });
         return;
       }
       results = await db
@@ -64,14 +78,8 @@ router.get("/appointments", requireAuth, async (req, res) => {
       results = await db.select().from(appointmentsTable);
     }
 
-    const formatted = await Promise.all(results.map(async (appt) => {
-      const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, appt.farmerId)).limit(1);
-      const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, appt.doctorId)).limit(1);
-      const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
-      return formatAppointment(appt, farmer?.name ?? "Unknown", doctorUser?.name ?? "Unknown");
-    }));
-
-    res.json(formatted);
+    const formatted = await Promise.all(results.map(enrichAppointment));
+    res.json({ appointments: formatted });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to list appointments" });
@@ -101,11 +109,7 @@ router.post("/appointments", requireAuth, async (req, res) => {
       status: "pending",
     }).returning();
 
-    const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, appt.doctorId)).limit(1);
-    const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
-
-    res.status(201).json(formatAppointment(appt, farmer?.name ?? "Unknown", doctorUser?.name ?? "Unknown"));
+    res.status(201).json(await enrichAppointment(appt));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to create appointment" });
@@ -124,10 +128,7 @@ router.get("/appointments/:id", requireAuth, async (req, res) => {
       res.status(404).json({ error: "Appointment not found" });
       return;
     }
-    const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, appt.farmerId)).limit(1);
-    const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, appt.doctorId)).limit(1);
-    const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
-    res.json(formatAppointment(appt, farmer?.name ?? "Unknown", doctorUser?.name ?? "Unknown"));
+    res.json(await enrichAppointment(appt));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get appointment" });
@@ -136,7 +137,6 @@ router.get("/appointments/:id", requireAuth, async (req, res) => {
 
 router.patch("/appointments/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params.id);
-  const { userId, role } = (req as Request & { user: JwtPayload }).user;
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
@@ -153,10 +153,7 @@ router.patch("/appointments/:id", requireAuth, async (req, res) => {
       ...(notes !== undefined && { notes }),
     }).where(eq(appointmentsTable.id, id)).returning();
 
-    const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, updated.farmerId)).limit(1);
-    const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, updated.doctorId)).limit(1);
-    const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
-    res.json(formatAppointment(updated, farmer?.name ?? "Unknown", doctorUser?.name ?? "Unknown"));
+    res.json(await enrichAppointment(updated));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to update appointment" });

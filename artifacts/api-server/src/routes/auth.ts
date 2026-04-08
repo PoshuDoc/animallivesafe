@@ -1,5 +1,8 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -8,6 +11,39 @@ import type { JwtPayload } from "../middlewares/auth";
 import type { Request } from "express";
 
 const router = Router();
+
+const uploadsDir = path.join(process.cwd(), "uploads", "avatars");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `avatar_${Date.now()}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files allowed"));
+  },
+});
+
+function formatUser(user: typeof usersTable.$inferSelect) {
+  return {
+    id: user.id,
+    name: user.name,
+    phone: user.phone,
+    role: user.role,
+    district: user.district,
+    avatarUrl: user.avatarUrl,
+    createdAt: user.createdAt,
+  };
+}
 
 router.post("/auth/register", async (req, res) => {
   const { name, phone, password, role, district } = req.body;
@@ -34,17 +70,7 @@ router.post("/auth/register", async (req, res) => {
       district: district || null,
     }).returning();
     const token = signToken({ userId: user.id, role: user.role, phone: user.phone });
-    res.status(201).json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        district: user.district,
-        createdAt: user.createdAt,
-      },
-    });
+    res.status(201).json({ token, user: formatUser(user) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Registration failed" });
@@ -69,17 +95,7 @@ router.post("/auth/login", async (req, res) => {
       return;
     }
     const token = signToken({ userId: user.id, role: user.role, phone: user.phone });
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        district: user.district,
-        createdAt: user.createdAt,
-      },
-    });
+    res.json({ token, user: formatUser(user) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Login failed" });
@@ -94,17 +110,46 @@ router.get("/auth/me", requireAuth, async (req, res) => {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json({
-      id: user.id,
-      name: user.name,
-      phone: user.phone,
-      role: user.role,
-      district: user.district,
-      createdAt: user.createdAt,
-    });
+    res.json(formatUser(user));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get user" });
+  }
+});
+
+router.patch("/auth/profile", requireAuth, async (req, res) => {
+  const { userId } = (req as Request & { user: JwtPayload }).user;
+  const { name, district } = req.body;
+  try {
+    const updateData: Record<string, string | null> = {};
+    if (name !== undefined) updateData.name = name;
+    if (district !== undefined) updateData.district = district || null;
+
+    if (Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+    const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, userId)).returning();
+    res.json(formatUser(user));
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+router.post("/auth/profile/avatar", requireAuth, upload.single("avatar"), async (req, res) => {
+  const { userId } = (req as Request & { user: JwtPayload }).user;
+  if (!req.file) {
+    res.status(400).json({ error: "No file uploaded" });
+    return;
+  }
+  try {
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const [user] = await db.update(usersTable).set({ avatarUrl }).where(eq(usersTable.id, userId)).returning();
+    res.json({ avatarUrl, user: formatUser(user) });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to upload avatar" });
   }
 });
 
