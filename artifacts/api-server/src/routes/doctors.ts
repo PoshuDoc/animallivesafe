@@ -1,23 +1,53 @@
 import { Router } from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { db } from "@workspace/db";
-import { usersTable, doctorsTable, reviewsTable } from "@workspace/db";
-import { eq, and, ilike, avg, count, sql } from "drizzle-orm";
+import { usersTable, doctorsTable, reviewsTable, appointmentsTable } from "@workspace/db";
+import { eq, and, ilike, avg, count, sql, gte } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import type { JwtPayload } from "../middlewares/auth";
 import type { Request } from "express";
 
 const router = Router();
 
-function formatDoctor(doctor: typeof doctorsTable.$inferSelect, user: typeof usersTable.$inferSelect, avgRating?: number, totalReviews?: number, totalAppts?: number) {
+const uploadsDir = path.join(process.cwd(), "uploads", "avatars");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `avatar_${Date.now()}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files allowed"));
+  },
+});
+
+function formatDoctor(
+  doctor: typeof doctorsTable.$inferSelect,
+  user: typeof usersTable.$inferSelect,
+  avgRating?: number,
+  totalReviews?: number,
+  totalAppts?: number
+) {
   return {
     id: doctor.id,
     userId: doctor.userId,
     name: user.name,
     phone: user.phone,
+    avatarUrl: user.avatarUrl,
     specialties: doctor.specialties,
     district: doctor.district,
     upazila: doctor.upazila,
     clinicName: doctor.clinicName,
+    chamberAddress: doctor.chamberAddress,
     bio: doctor.bio,
     yearsExperience: doctor.yearsExperience,
     consultationFee: doctor.consultationFee,
@@ -28,6 +58,26 @@ function formatDoctor(doctor: typeof doctorsTable.$inferSelect, user: typeof use
     totalAppointments: totalAppts ?? 0,
     createdAt: doctor.createdAt,
   };
+}
+
+async function getDoctorWithStats(doctorId: number) {
+  const [row] = await db
+    .select()
+    .from(doctorsTable)
+    .innerJoin(usersTable, eq(doctorsTable.userId, usersTable.id))
+    .where(eq(doctorsTable.id, doctorId));
+  if (!row) return null;
+  const [ratingRow] = await db
+    .select({ avg: avg(reviewsTable.rating), count: count() })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.doctorId, doctorId));
+  return formatDoctor(
+    row.doctors,
+    row.users,
+    ratingRow?.avg ? parseFloat(ratingRow.avg) : 0,
+    ratingRow?.count ?? 0,
+    0
+  );
 }
 
 router.get("/doctors", async (req, res) => {
@@ -76,12 +126,7 @@ router.get("/doctors", async (req, res) => {
       );
     }));
 
-    res.json({
-      doctors: doctorsWithStats,
-      total,
-      page: pageNum,
-      totalPages: Math.ceil(total / limitNum),
-    });
+    res.json({ doctors: doctorsWithStats, total, page: pageNum, totalPages: Math.ceil(total / limitNum) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to list doctors" });
@@ -102,19 +147,149 @@ router.get("/doctors/featured", async (req, res) => {
         .select({ avg: avg(reviewsTable.rating), count: count() })
         .from(reviewsTable)
         .where(eq(reviewsTable.doctorId, row.doctors.id));
-      return formatDoctor(
-        row.doctors,
-        row.users,
-        ratingRow?.avg ? parseFloat(ratingRow.avg) : 0,
-        ratingRow?.count ?? 0,
-        0
-      );
+      return formatDoctor(row.doctors, row.users, ratingRow?.avg ? parseFloat(ratingRow.avg) : 0, ratingRow?.count ?? 0, 0);
     }));
 
     res.json(result);
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to list featured doctors" });
+  }
+});
+
+router.get("/doctors/me", requireAuth, async (req, res) => {
+  const { userId, role } = (req as Request & { user: JwtPayload }).user;
+  if (role !== "doctor") {
+    res.status(403).json({ error: "Only doctors can access this" });
+    return;
+  }
+  try {
+    const [doctorRow] = await db.select().from(doctorsTable).where(eq(doctorsTable.userId, userId)).limit(1);
+    if (!doctorRow) {
+      res.status(404).json({ error: "Doctor profile not found" });
+      return;
+    }
+    const profile = await getDoctorWithStats(doctorRow.id);
+    res.json(profile);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get doctor profile" });
+  }
+});
+
+router.patch("/doctors/me", requireAuth, async (req, res) => {
+  const { userId, role } = (req as Request & { user: JwtPayload }).user;
+  if (role !== "doctor") {
+    res.status(403).json({ error: "Only doctors can update this" });
+    return;
+  }
+  try {
+    const [doctorRow] = await db.select().from(doctorsTable).where(eq(doctorsTable.userId, userId)).limit(1);
+    if (!doctorRow) {
+      res.status(404).json({ error: "Doctor profile not found" });
+      return;
+    }
+
+    const { name, phone, specialties, district, upazila, clinicName, chamberAddress, bio, yearsExperience, consultationFee } = req.body;
+
+    const userUpdate: Record<string, any> = {};
+    if (name !== undefined) userUpdate.name = name;
+    if (phone !== undefined) userUpdate.phone = phone;
+    if (Object.keys(userUpdate).length > 0) {
+      await db.update(usersTable).set(userUpdate).where(eq(usersTable.id, userId));
+    }
+
+    const doctorUpdate: Record<string, any> = {};
+    if (specialties !== undefined) doctorUpdate.specialties = Array.isArray(specialties) ? specialties : [specialties];
+    if (district !== undefined) doctorUpdate.district = district;
+    if (upazila !== undefined) doctorUpdate.upazila = upazila;
+    if (clinicName !== undefined) doctorUpdate.clinicName = clinicName;
+    if (chamberAddress !== undefined) doctorUpdate.chamberAddress = chamberAddress;
+    if (bio !== undefined) doctorUpdate.bio = bio;
+    if (yearsExperience !== undefined) doctorUpdate.yearsExperience = yearsExperience;
+    if (consultationFee !== undefined) doctorUpdate.consultationFee = consultationFee;
+    if (Object.keys(doctorUpdate).length > 0) {
+      await db.update(doctorsTable).set(doctorUpdate).where(eq(doctorsTable.id, doctorRow.id));
+    }
+
+    const profile = await getDoctorWithStats(doctorRow.id);
+    res.json(profile);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to update doctor profile" });
+  }
+});
+
+router.post("/doctors/me/avatar", requireAuth, upload.single("avatar"), async (req, res) => {
+  const { userId, role } = (req as Request & { user: JwtPayload }).user;
+  if (role !== "doctor") {
+    res.status(403).json({ error: "Only doctors can access this" });
+    return;
+  }
+  if (!req.file) {
+    res.status(400).json({ error: "No file uploaded" });
+    return;
+  }
+  try {
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await db.update(usersTable).set({ avatarUrl }).where(eq(usersTable.id, userId));
+    res.json({ avatarUrl });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to upload avatar" });
+  }
+});
+
+router.get("/doctors/me/revenue", requireAuth, async (req, res) => {
+  const { userId, role } = (req as Request & { user: JwtPayload }).user;
+  if (role !== "doctor") {
+    res.status(403).json({ error: "Only doctors can access this" });
+    return;
+  }
+  const { period = "all" } = req.query as { period?: string };
+
+  try {
+    const [doctorRow] = await db.select().from(doctorsTable).where(eq(doctorsTable.userId, userId)).limit(1);
+    if (!doctorRow) {
+      res.json({ revenue: 0, completedCount: 0, period });
+      return;
+    }
+
+    const periodDays: Record<string, number> = {
+      "7d": 7, "15d": 15, "30d": 30, "90d": 90, "180d": 180, "365d": 365,
+    };
+
+    let completedAppointments;
+    if (period !== "all" && periodDays[period]) {
+      const days = periodDays[period];
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      const cutoffStr = cutoffDate.toISOString().split("T")[0];
+      completedAppointments = await db
+        .select()
+        .from(appointmentsTable)
+        .where(and(
+          eq(appointmentsTable.doctorId, doctorRow.id),
+          eq(appointmentsTable.status, "completed"),
+          gte(appointmentsTable.appointmentDate, cutoffStr),
+        ));
+    } else {
+      completedAppointments = await db
+        .select()
+        .from(appointmentsTable)
+        .where(and(
+          eq(appointmentsTable.doctorId, doctorRow.id),
+          eq(appointmentsTable.status, "completed"),
+        ));
+    }
+
+    const fee = doctorRow.consultationFee ?? 0;
+    const revenue = completedAppointments.length * fee;
+
+    res.json({ revenue, completedCount: completedAppointments.length, consultationFee: fee, period });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get revenue" });
   }
 });
 
@@ -125,26 +300,12 @@ router.get("/doctors/:id", async (req, res) => {
     return;
   }
   try {
-    const [row] = await db
-      .select()
-      .from(doctorsTable)
-      .innerJoin(usersTable, eq(doctorsTable.userId, usersTable.id))
-      .where(eq(doctorsTable.id, id));
-    if (!row) {
+    const profile = await getDoctorWithStats(id);
+    if (!profile) {
       res.status(404).json({ error: "Doctor not found" });
       return;
     }
-    const [ratingRow] = await db
-      .select({ avg: avg(reviewsTable.rating), count: count() })
-      .from(reviewsTable)
-      .where(eq(reviewsTable.doctorId, id));
-    res.json(formatDoctor(
-      row.doctors,
-      row.users,
-      ratingRow?.avg ? parseFloat(ratingRow.avg) : 0,
-      ratingRow?.count ?? 0,
-      0
-    ));
+    res.json(profile);
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get doctor" });
@@ -157,7 +318,7 @@ router.post("/doctors", requireAuth, async (req, res) => {
     res.status(403).json({ error: "Only doctors can create a profile" });
     return;
   }
-  const { specialties, district, upazila, clinicName, bio, yearsExperience, consultationFee } = req.body;
+  const { specialties, district, upazila, clinicName, chamberAddress, bio, yearsExperience, consultationFee } = req.body;
   if (!specialties || !district) {
     res.status(400).json({ error: "Specialties and district are required" });
     return;
@@ -174,14 +335,15 @@ router.post("/doctors", requireAuth, async (req, res) => {
       district,
       upazila: upazila || null,
       clinicName: clinicName || null,
+      chamberAddress: chamberAddress || null,
       bio: bio || null,
       yearsExperience: yearsExperience || 0,
       consultationFee: consultationFee || 0,
       status: "pending",
       isFeatured: false,
     }).returning();
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    res.status(201).json(formatDoctor(doctor, user, 0, 0, 0));
+    const profile = await getDoctorWithStats(doctor.id);
+    res.status(201).json(profile);
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to create doctor profile" });
@@ -201,18 +363,19 @@ router.patch("/doctors/:id", requireAuth, async (req, res) => {
       res.status(403).json({ error: "Forbidden" });
       return;
     }
-    const { specialties, district, upazila, clinicName, bio, yearsExperience, consultationFee } = req.body;
-    const [updated] = await db.update(doctorsTable).set({
+    const { specialties, district, upazila, clinicName, chamberAddress, bio, yearsExperience, consultationFee } = req.body;
+    await db.update(doctorsTable).set({
       ...(specialties !== undefined && { specialties }),
       ...(district !== undefined && { district }),
       ...(upazila !== undefined && { upazila }),
       ...(clinicName !== undefined && { clinicName }),
+      ...(chamberAddress !== undefined && { chamberAddress }),
       ...(bio !== undefined && { bio }),
       ...(yearsExperience !== undefined && { yearsExperience }),
       ...(consultationFee !== undefined && { consultationFee }),
-    }).where(eq(doctorsTable.id, id)).returning();
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    res.json(formatDoctor(updated, user, 0, 0, 0));
+    }).where(eq(doctorsTable.id, id));
+    const profile = await getDoctorWithStats(id);
+    res.json(profile);
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to update doctor" });

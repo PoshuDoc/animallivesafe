@@ -12,6 +12,7 @@ export const doctorsTable = pgTable("doctors", {
   district: text("district").notNull(),
   upazila: text("upazila"),
   clinicName: text("clinic_name"),
+  chamberAddress: text("chamber_address"),
   bio: text("bio"),
   yearsExperience: integer("years_experience").default(0),
   consultationFee: integer("consultation_fee").default(0),
