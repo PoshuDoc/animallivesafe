@@ -13,9 +13,16 @@ import { sendWelcomeEmail } from "../lib/email";
 
 const router = Router();
 
-const uploadsDir = path.join(process.cwd(), "uploads", "avatars");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const uploadsDir = process.env.NODE_ENV === "production"
+  ? "/tmp/uploads/avatars"
+  : path.join(process.cwd(), "uploads", "avatars");
+
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch {
+  // serverless read-only filesystem — avatar upload disabled
 }
 
 const storage = multer.diskStorage({
