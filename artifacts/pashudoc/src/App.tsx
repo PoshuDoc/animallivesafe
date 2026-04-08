@@ -1,0 +1,55 @@
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { getToken } from "@/lib/auth";
+import NotFound from "@/pages/not-found";
+
+import Home from "@/pages/Home";
+import Doctors from "@/pages/Doctors";
+import DoctorProfile from "@/pages/DoctorProfile";
+import BookAppointment from "@/pages/BookAppointment";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import FarmerDashboard from "@/pages/FarmerDashboard";
+import DoctorDashboard from "@/pages/DoctorDashboard";
+import DoctorRegister from "@/pages/DoctorRegister";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
+setAuthTokenGetter(() => getToken());
+
+const queryClient = new QueryClient();
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/doctors" component={Doctors} />
+      <Route path="/doctors/:id" component={DoctorProfile} />
+      <Route path="/book/:doctorId" component={BookAppointment} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/dashboard" component={FarmerDashboard} />
+      <Route path="/doctor/dashboard" component={DoctorDashboard} />
+      <Route path="/doctor/register" component={DoctorRegister} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
