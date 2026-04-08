@@ -44,9 +44,10 @@ export default function Register() {
 
   const onSubmit = (data: FarmerFormValues) => {
     if (!role) return;
+    console.log("[Register] submitting:", { name: data.name, phone: data.phone, district: data.district, role });
 
     registerMutation.mutate(
-      { data: { ...data, role } },
+      { data: { name: data.name, phone: data.phone, email: data.email || undefined, password: data.password, district: data.district, role } },
       {
         onSuccess: (res) => {
           setToken(res.token);
@@ -62,16 +63,13 @@ export default function Register() {
           }
         },
         onError: (err: unknown) => {
-          console.error("[Register] mutation error:", err);
-          let message = "অনুগ্রহ করে আবার চেষ্টা করুন";
-          if (err instanceof Error) {
-            if (err.message.includes("already registered")) {
-              message = "এই মোবাইল নম্বর আগেই নিবন্ধিত। অনুগ্রহ করে লগইন করুন।";
-            } else if (err.message.includes("400")) {
-              message = "তথ্য সঠিক নয়। সব ঘর পূরণ করুন।";
-            } else if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
-              message = "সার্ভারের সাথে সংযোগ হচ্ছে না। পেজ রিফ্রেশ করুন।";
-            }
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.error("[Register] error:", errMsg, err);
+          let message = errMsg || "অনুগ্রহ করে আবার চেষ্টা করুন";
+          if (errMsg.includes("already registered")) {
+            message = "এই মোবাইল নম্বর আগেই নিবন্ধিত। লগইন করুন।";
+          } else if (errMsg.includes("Failed to fetch") || errMsg.includes("NetworkError") || errMsg.includes("fetch")) {
+            message = "সার্ভারের সাথে সংযোগ হচ্ছে না। পেজ রিফ্রেশ করুন।";
           }
           toast({
             variant: "destructive",
