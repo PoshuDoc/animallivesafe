@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   phone TEXT NOT NULL UNIQUE,
+  email TEXT,
   password_hash TEXT NOT NULL,
   role user_role NOT NULL DEFAULT 'farmer',
   district TEXT,

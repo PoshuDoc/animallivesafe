@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { requireAuth, signToken } from "../middlewares/auth";
 import type { JwtPayload } from "../middlewares/auth";
 import type { Request } from "express";
+import { sendWelcomeEmail } from "../lib/email";
 
 const router = Router();
 
@@ -46,7 +47,7 @@ function formatUser(user: typeof usersTable.$inferSelect) {
 }
 
 router.post("/auth/register", async (req, res) => {
-  const { name, phone, password, role, district } = req.body;
+  const { name, phone, email, password, role, district } = req.body;
   if (!name || !phone || !password || !role) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -65,11 +66,15 @@ router.post("/auth/register", async (req, res) => {
     const [user] = await db.insert(usersTable).values({
       name,
       phone,
+      email: email || null,
       passwordHash,
       role,
       district: district || null,
     }).returning();
     const token = signToken({ userId: user.id, role: user.role, phone: user.phone });
+    if (user.email) {
+      sendWelcomeEmail(user.name, user.email, user.role).catch(() => {});
+    }
     res.status(201).json({ token, user: formatUser(user) });
   } catch (err) {
     req.log.error(err);

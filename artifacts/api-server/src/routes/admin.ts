@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendDoctorApprovalEmail, sendDoctorRejectionEmail, sendNewDoctorAdminNotification } from "../lib/email";
 import { db } from "@workspace/db";
 import { usersTable, doctorsTable, appointmentsTable, reviewsTable, siteContentTable, faqsTable } from "@workspace/db";
 import { eq, count, avg, and, gte, sql, desc } from "drizzle-orm";
@@ -151,6 +152,13 @@ router.patch("/admin/doctors/:id/approve", async (req, res) => {
     }).where(eq(doctorsTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Doctor not found" }); return; }
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId)).limit(1);
+    if (user?.email) {
+      if (status === "approved") {
+        sendDoctorApprovalEmail(user.name, user.email).catch(() => {});
+      } else if (status === "rejected") {
+        sendDoctorRejectionEmail(user.name, user.email).catch(() => {});
+      }
+    }
     res.json(formatDoctor(updated, user, 0, 0));
   } catch (err) {
     req.log.error(err);

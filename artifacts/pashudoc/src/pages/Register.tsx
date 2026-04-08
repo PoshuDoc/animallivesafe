@@ -20,6 +20,7 @@ import { setToken } from "@/lib/auth";
 const farmerSchema = z.object({
   name: z.string().min(2, { message: "নাম কমপক্ষে ২ অক্ষরের হতে হবে" }),
   phone: z.string().min(11, { message: "সঠিক মোবাইল নম্বর দিন" }),
+  email: z.string().email({ message: "সঠিক ইমেইল দিন" }).optional().or(z.literal("")),
   password: z.string().min(6, { message: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে" }),
   district: z.string().min(1, { message: "জেলা নির্বাচন করুন" }),
 });
@@ -38,6 +39,7 @@ export default function Register() {
     defaultValues: {
       name: "",
       phone: "",
+      email: "",
       password: "",
       district: "",
     },
@@ -154,6 +156,19 @@ export default function Register() {
                       <FormLabel>মোবাইল নম্বর</FormLabel>
                       <FormControl>
                         <Input placeholder="01XXXXXXXXX" type="tel" {...field} className="h-12 bg-background" data-testid="input-phone" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ইমেইল ঠিকানা (ঐচ্ছিক)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="example@email.com" type="email" {...field} className="h-12 bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

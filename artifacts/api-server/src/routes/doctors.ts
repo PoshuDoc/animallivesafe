@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendNewDoctorAdminNotification } from "../lib/email";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -343,6 +344,10 @@ router.post("/doctors", requireAuth, async (req, res) => {
       isFeatured: false,
     }).returning();
     const profile = await getDoctorWithStats(doctor.id);
+    const [doctorUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (doctorUser) {
+      sendNewDoctorAdminNotification(doctorUser.name, doctorUser.phone).catch(() => {});
+    }
     res.status(201).json(profile);
   } catch (err) {
     req.log.error(err);

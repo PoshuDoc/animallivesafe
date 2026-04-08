@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { db } from "@workspace/db";
 import { usersTable, doctorsTable, appointmentsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -109,7 +110,17 @@ router.post("/appointments", requireAuth, async (req, res) => {
       status: "pending",
     }).returning();
 
-    res.status(201).json(await enrichAppointment(appt));
+    const enriched = await enrichAppointment(appt);
+
+    const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (farmer?.email) {
+      sendAppointmentConfirmationEmail(
+        farmer.name, farmer.email,
+        enriched.doctorName, appointmentDate, appointmentTime, animalType
+      ).catch(() => {});
+    }
+
+    res.status(201).json(enriched);
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to create appointment" });
