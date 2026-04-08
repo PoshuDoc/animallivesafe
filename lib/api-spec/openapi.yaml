@@ -495,6 +495,9 @@ components:
           type: string
         phone:
           type: string
+        email:
+          type: string
+          format: email
         password:
           type: string
         role:

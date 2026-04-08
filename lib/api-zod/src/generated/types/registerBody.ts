@@ -10,6 +10,7 @@ import type { RegisterBodyRole } from "./registerBodyRole";
 export interface RegisterBody {
   name: string;
   phone: string;
+  email?: string;
   password: string;
   role: RegisterBodyRole;
   district?: string;

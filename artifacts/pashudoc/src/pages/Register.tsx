@@ -64,11 +64,15 @@ export default function Register() {
             setLocation("/dashboard");
           }
         },
-        onError: () => {
+        onError: (err: unknown) => {
+          const message =
+            err instanceof Error && err.message.includes("already registered")
+              ? "এই মোবাইল নম্বর আগেই নিবন্ধিত। অনুগ্রহ করে লগইন করুন।"
+              : "অনুগ্রহ করে আবার চেষ্টা করুন";
           toast({
             variant: "destructive",
             title: "রেজিস্ট্রেশন ব্যর্থ হয়েছে",
-            description: "অনুগ্রহ করে আবার চেষ্টা করুন",
+            description: message,
           });
         },
       }
