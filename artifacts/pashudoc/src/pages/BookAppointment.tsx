@@ -143,7 +143,7 @@ export default function BookAppointment() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-base font-semibold">পশুর ধরন</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="h-14 bg-background shadow-sm text-base">
                                   <SelectValue placeholder="পশু নির্বাচন করুন" />

@@ -1,10 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,10 +62,17 @@ export default function Register() {
           }
         },
         onError: (err: unknown) => {
-          const message =
-            err instanceof Error && err.message.includes("already registered")
-              ? "এই মোবাইল নম্বর আগেই নিবন্ধিত। অনুগ্রহ করে লগইন করুন।"
-              : "অনুগ্রহ করে আবার চেষ্টা করুন";
+          console.error("[Register] mutation error:", err);
+          let message = "অনুগ্রহ করে আবার চেষ্টা করুন";
+          if (err instanceof Error) {
+            if (err.message.includes("already registered")) {
+              message = "এই মোবাইল নম্বর আগেই নিবন্ধিত। অনুগ্রহ করে লগইন করুন।";
+            } else if (err.message.includes("400")) {
+              message = "তথ্য সঠিক নয়। সব ঘর পূরণ করুন।";
+            } else if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+              message = "সার্ভারের সাথে সংযোগ হচ্ছে না। পেজ রিফ্রেশ করুন।";
+            }
+          }
           toast({
             variant: "destructive",
             title: "রেজিস্ট্রেশন ব্যর্থ হয়েছে",
@@ -184,7 +188,7 @@ export default function Register() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>আপনার জেলা</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12 bg-background" data-testid="input-district">
                             <SelectValue placeholder="জেলা নির্বাচন করুন" />

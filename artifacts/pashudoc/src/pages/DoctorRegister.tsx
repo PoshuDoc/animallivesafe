@@ -88,7 +88,7 @@ export default function DoctorRegister() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>জেলা</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="bg-background">
                                 <SelectValue placeholder="জেলা নির্বাচন করুন" />
