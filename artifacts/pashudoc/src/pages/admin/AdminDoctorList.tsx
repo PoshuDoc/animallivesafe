@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Star, Phone, MapPin, Stethoscope, X, ChevronRight, Calendar, DollarSign } from "lucide-react";
 
-const API = import.meta.env.BASE_URL.replace(/\/$/, "");
+const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 function apiFetch(path: string) {
   const token = localStorage.getItem("pashudoc_token");

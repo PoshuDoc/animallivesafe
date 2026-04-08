@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { getToken } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 
@@ -23,6 +23,9 @@ import TermsOfUse from "@/pages/TermsOfUse";
 import Mission from "@/pages/Mission";
 
 setAuthTokenGetter(() => getToken());
+if (import.meta.env.VITE_API_URL) {
+  setBaseUrl(import.meta.env.VITE_API_URL as string);
+}
 
 const queryClient = new QueryClient();
 

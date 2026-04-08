@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, DollarSign, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-const API = import.meta.env.BASE_URL.replace(/\/$/, "");
+const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 function apiFetch(path: string) {
   const token = localStorage.getItem("pashudoc_token");

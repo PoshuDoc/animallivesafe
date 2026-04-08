@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, Navigation, Layout, FileText, Globe, Save } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
-const API = import.meta.env.BASE_URL.replace(/\/$/, "");
+const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("pashudoc_token");
