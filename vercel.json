@@ -10,7 +10,7 @@
     "api/index.js": {
       "maxDuration": 30,
       "memory": 512,
-      "includeFiles": "api/_bundle/**"
+      "includeFiles": "api/_bundle.cjs"
     }
   },
   "env": {
