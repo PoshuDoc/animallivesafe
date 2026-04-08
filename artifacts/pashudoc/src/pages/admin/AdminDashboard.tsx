@@ -17,12 +17,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle, XCircle, Users, Stethoscope, Calendar,
   ShieldCheck, Clock, Star, TrendingUp, MapPin, AlertCircle,
-  Settings, BarChart2, List, Menu, X,
+  Settings, BarChart2, List, Menu, X, HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AdminRevenue } from "./AdminRevenue";
 import { AdminDoctorList } from "./AdminDoctorList";
 import { AdminSiteSettings } from "./AdminSiteSettings";
+import { AdminFaq } from "./AdminFaq";
 
 type Section =
   | "overview"
@@ -31,6 +32,7 @@ type Section =
   | "approvals"
   | "appointments"
   | "users"
+  | "faq"
   | "site-settings";
 
 const NAV_ITEMS: { key: Section; icon: any; label: string }[] = [
@@ -40,6 +42,7 @@ const NAV_ITEMS: { key: Section; icon: any; label: string }[] = [
   { key: "approvals", icon: ShieldCheck, label: "ডাক্তার অনুমোদন" },
   { key: "appointments", icon: Calendar, label: "অ্যাপয়েন্টমেন্ট" },
   { key: "users", icon: Users, label: "ব্যবহারকারী" },
+  { key: "faq", icon: HelpCircle, label: "FAQ পরিচালনা" },
   { key: "site-settings", icon: Settings, label: "সাইট সেটিং" },
 ];
 
@@ -129,6 +132,7 @@ export default function AdminDashboard() {
               {section === "approvals" && <ApprovalsSection />}
               {section === "appointments" && <AppointmentsSection />}
               {section === "users" && <UsersSection />}
+              {section === "faq" && <AdminFaq />}
               {section === "site-settings" && <AdminSiteSettings />}
             </main>
           </div>

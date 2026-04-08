@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, doctorsTable, appointmentsTable } from "@workspace/db";
-import { count, eq, sql } from "drizzle-orm";
+import { usersTable, doctorsTable, appointmentsTable, siteContentTable, faqsTable } from "@workspace/db";
+import { count, eq, asc } from "drizzle-orm";
 
 const router = Router();
 
@@ -21,6 +21,34 @@ router.get("/stats/overview", async (req, res) => {
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get stats" });
+  }
+});
+
+router.get("/site-content", async (req, res) => {
+  try {
+    const rows = await db.select().from(siteContentTable);
+    const content: Record<string, string> = {};
+    for (const row of rows) {
+      content[row.key] = row.value;
+    }
+    res.json(content);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get site content" });
+  }
+});
+
+router.get("/faqs", async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(faqsTable)
+      .where(eq(faqsTable.isActive, true))
+      .orderBy(asc(faqsTable.order), asc(faqsTable.createdAt));
+    res.json(rows);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get FAQs" });
   }
 });
 

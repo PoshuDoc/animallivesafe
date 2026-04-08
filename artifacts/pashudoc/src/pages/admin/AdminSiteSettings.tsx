@@ -30,10 +30,24 @@ const DEFAULTS: Record<string, string> = {
   footer_email: "support@pashudoc.com",
   footer_address: "ঢাকা, বাংলাদেশ",
   footer_copyright: "© ২০২৫ পশুডক। সর্বস্বত্ব সংরক্ষিত।",
+  landing_hero_badge: "বাংলাদেশের কৃষকদের আস্থার প্রতীক",
   landing_hero_title: "আপনার গবাদি পশুর জন্য সেরা ডাক্তার খুঁজুন",
   landing_hero_subtitle: "ঘরে বসেই আপনার জেলার অভিজ্ঞ ভেটেরিনারি ডাক্তারদের খুঁজুন এবং অ্যাপয়েন্টমেন্ট বুক করুন।",
-  landing_cta_title: "এখনই শুরু করুন",
-  landing_cta_desc: "বিনামূল্যে রেজিস্ট্রেশন করুন এবং আপনার এলাকার সেরা পশু চিকিৎসক খুঁজে নিন।",
+  landing_featured_title: "বিশেষজ্ঞ ডাক্তারগণ",
+  landing_featured_subtitle: "আমাদের প্ল্যাটফর্মের সেরা রেটিং প্রাপ্ত ডাক্তাররা",
+  landing_how_title: "কীভাবে কাজ করে?",
+  landing_how_subtitle: "খুব সহজেই মাত্র ৩টি ধাপে আপনার গবাদি পশুর চিকিৎসা নিশ্চিত করুন",
+  landing_step1_title: "১. ডাক্তার খুঁজুন",
+  landing_step1_desc: "আপনার জেলা এবং পশুর ধরন অনুযায়ী অভিজ্ঞ ডাক্তার খুঁজুন",
+  landing_step2_title: "২. বুক করুন",
+  landing_step2_desc: "আপনার সুবিধামতো সময় ও তারিখ নির্বাচন করে অ্যাপয়েন্টমেন্ট নিন",
+  landing_step3_title: "৩. চিকিৎসা নিন",
+  landing_step3_desc: "নির্ধারিত সময়ে ডাক্তারের সাথে দেখা করুন বা ফোনে কথা বলুন",
+  landing_faq_badge: "সাধারণ প্রশ্ন",
+  landing_faq_title: "প্রায়ই জিজ্ঞাসিত প্রশ্নসমূহ",
+  landing_faq_subtitle: "পশুডক সম্পর্কে আপনার মনে যা প্রশ্ন আসতে পারে",
+  landing_cta_title: "আজই শুরু করুন — আপনার পশুর সুস্বাস্থ্য নিশ্চিত করুন",
+  landing_cta_desc: "হাজার হাজার কৃষক ইতিমধ্যেই পশুডক ব্যবহার করে তাদের গবাদি পশুর সঠিক চিকিৎসা নিশ্চিত করছেন। আপনিও যোগ দিন।",
   landing_stats_doctors: "৫০০+",
   landing_stats_districts: "৬৪",
   landing_stats_farmers: "১০,০০০+",
@@ -157,9 +171,56 @@ export function AdminSiteSettings() {
             <Card>
               <CardHeader><CardTitle className="text-base">হিরো সেকশন</CardTitle></CardHeader>
               <CardContent className="space-y-4">
+                <Field label="ব্যাজ টেক্সট" value={content.landing_hero_badge ?? ""} onChange={v => set("landing_hero_badge", v)} />
                 <Field label="হিরো শিরোনাম" value={content.landing_hero_title ?? ""} onChange={v => set("landing_hero_title", v)} />
                 <Field label="হিরো সাবটাইটেল" value={content.landing_hero_subtitle ?? ""} onChange={v => set("landing_hero_subtitle", v)} />
-                <SaveButton onClick={() => saveSection(["landing_hero_title","landing_hero_subtitle"])} loading={saveMutation.isPending} />
+                <SaveButton onClick={() => saveSection(["landing_hero_badge","landing_hero_title","landing_hero_subtitle"])} loading={saveMutation.isPending} />
+              </CardContent>
+            </Card>
+
+            {/* Featured Doctors */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">বিশেষজ্ঞ ডাক্তার সেকশন</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Field label="শিরোনাম" value={content.landing_featured_title ?? ""} onChange={v => set("landing_featured_title", v)} />
+                <Field label="সাবটাইটেল" value={content.landing_featured_subtitle ?? ""} onChange={v => set("landing_featured_subtitle", v)} />
+                <SaveButton onClick={() => saveSection(["landing_featured_title","landing_featured_subtitle"])} loading={saveMutation.isPending} />
+              </CardContent>
+            </Card>
+
+            {/* How it works */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">কীভাবে কাজ করে সেকশন</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Field label="শিরোনাম" value={content.landing_how_title ?? ""} onChange={v => set("landing_how_title", v)} />
+                <Field label="সাবটাইটেল" value={content.landing_how_subtitle ?? ""} onChange={v => set("landing_how_subtitle", v)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/30">
+                  <p className="sm:col-span-2 text-xs font-semibold text-muted-foreground">ধাপ ১</p>
+                  <Field label="ধাপ ১ শিরোনাম" value={content.landing_step1_title ?? ""} onChange={v => set("landing_step1_title", v)} />
+                  <Field label="ধাপ ১ বিবরণ" value={content.landing_step1_desc ?? ""} onChange={v => set("landing_step1_desc", v)} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/30">
+                  <p className="sm:col-span-2 text-xs font-semibold text-muted-foreground">ধাপ ২</p>
+                  <Field label="ধাপ ২ শিরোনাম" value={content.landing_step2_title ?? ""} onChange={v => set("landing_step2_title", v)} />
+                  <Field label="ধাপ ২ বিবরণ" value={content.landing_step2_desc ?? ""} onChange={v => set("landing_step2_desc", v)} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/30">
+                  <p className="sm:col-span-2 text-xs font-semibold text-muted-foreground">ধাপ ৩</p>
+                  <Field label="ধাপ ৩ শিরোনাম" value={content.landing_step3_title ?? ""} onChange={v => set("landing_step3_title", v)} />
+                  <Field label="ধাপ ৩ বিবরণ" value={content.landing_step3_desc ?? ""} onChange={v => set("landing_step3_desc", v)} />
+                </div>
+                <SaveButton onClick={() => saveSection(["landing_how_title","landing_how_subtitle","landing_step1_title","landing_step1_desc","landing_step2_title","landing_step2_desc","landing_step3_title","landing_step3_desc"])} loading={saveMutation.isPending} />
+              </CardContent>
+            </Card>
+
+            {/* FAQ Section */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">FAQ সেকশন</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Field label="ব্যাজ টেক্সট" value={content.landing_faq_badge ?? ""} onChange={v => set("landing_faq_badge", v)} />
+                <Field label="শিরোনাম" value={content.landing_faq_title ?? ""} onChange={v => set("landing_faq_title", v)} />
+                <Field label="সাবটাইটেল" value={content.landing_faq_subtitle ?? ""} onChange={v => set("landing_faq_subtitle", v)} />
+                <SaveButton onClick={() => saveSection(["landing_faq_badge","landing_faq_title","landing_faq_subtitle"])} loading={saveMutation.isPending} />
               </CardContent>
             </Card>
 

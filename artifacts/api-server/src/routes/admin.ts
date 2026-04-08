@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, doctorsTable, appointmentsTable, reviewsTable, siteContentTable } from "@workspace/db";
+import { usersTable, doctorsTable, appointmentsTable, reviewsTable, siteContentTable, faqsTable } from "@workspace/db";
 import { eq, count, avg, and, gte, sql, desc } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middlewares/auth";
 
@@ -318,6 +318,66 @@ router.delete("/admin/reviews/:id", async (req, res) => {
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to delete review" });
+  }
+});
+
+// ─── FAQ CRUD ─────────────────────────────────────────────────────────────────
+
+router.get("/admin/faqs", async (req, res) => {
+  try {
+    const rows = await db.select().from(faqsTable).orderBy(faqsTable.order, faqsTable.createdAt);
+    res.json(rows);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get FAQs" });
+  }
+});
+
+router.post("/admin/faqs", async (req, res) => {
+  const { question, answer, order, isActive } = req.body;
+  if (!question || !answer) { res.status(400).json({ error: "question এবং answer আবশ্যক" }); return; }
+  try {
+    const [row] = await db.insert(faqsTable).values({
+      question,
+      answer,
+      order: order ?? 0,
+      isActive: isActive !== false,
+    }).returning();
+    res.status(201).json(row);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "FAQ তৈরি করতে ব্যর্থ" });
+  }
+});
+
+router.put("/admin/faqs/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const { question, answer, order, isActive } = req.body;
+  try {
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (question !== undefined) updates.question = question;
+    if (answer !== undefined) updates.answer = answer;
+    if (order !== undefined) updates.order = order;
+    if (isActive !== undefined) updates.isActive = isActive;
+    const [row] = await db.update(faqsTable).set(updates).where(eq(faqsTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "FAQ পাওয়া যায়নি" }); return; }
+    res.json(row);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "FAQ আপডেট করতে ব্যর্থ" });
+  }
+});
+
+router.delete("/admin/faqs/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  try {
+    await db.delete(faqsTable).where(eq(faqsTable.id, id));
+    res.status(204).send();
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "FAQ মুছতে ব্যর্থ" });
   }
 });
 

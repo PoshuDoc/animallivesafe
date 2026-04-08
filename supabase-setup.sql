@@ -80,11 +80,21 @@ CREATE TABLE IF NOT EXISTS site_content (
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS faqs (
+  id SERIAL PRIMARY KEY,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  "order" INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
 -- =====================================================
 -- ৩. আগের ডেটা মুছে নতুন ডেটা ঢোকাও
 -- =====================================================
 
-TRUNCATE TABLE reviews, appointments, doctors, users, site_content RESTART IDENTITY CASCADE;
+TRUNCATE TABLE reviews, appointments, doctors, users, site_content, faqs RESTART IDENTITY CASCADE;
 
 -- Users (Admin, Doctors, Farmers)
 -- পাসওয়ার্ড hash (bcrypt, cost=10):
