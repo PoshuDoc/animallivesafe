@@ -73,5 +73,13 @@
     "vite": "catalog:",
     "wouter": "^3.3.5",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@tiptap/extension-link": "^3.22.2",
+    "@tiptap/extension-text-align": "^3.22.2",
+    "@tiptap/extension-underline": "^3.22.2",
+    "@tiptap/pm": "^3.22.2",
+    "@tiptap/react": "^3.22.2",
+    "@tiptap/starter-kit": "^3.22.2"
   }
 }

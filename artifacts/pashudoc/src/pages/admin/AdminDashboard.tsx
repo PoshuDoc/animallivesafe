@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import {
@@ -8,7 +9,6 @@ import {
   useAdminListUsers, getAdminListUsersQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,10 +17,113 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle, XCircle, Users, Stethoscope, Calendar,
   ShieldCheck, Clock, Star, TrendingUp, MapPin, AlertCircle,
+  Settings, BarChart2, List, Menu, X,
 } from "lucide-react";
 import { format } from "date-fns";
+import { AdminRevenue } from "./AdminRevenue";
+import { AdminDoctorList } from "./AdminDoctorList";
+import { AdminSiteSettings } from "./AdminSiteSettings";
+
+type Section =
+  | "overview"
+  | "revenue"
+  | "doctor-list"
+  | "approvals"
+  | "appointments"
+  | "users"
+  | "site-settings";
+
+const NAV_ITEMS: { key: Section; icon: any; label: string }[] = [
+  { key: "overview", icon: BarChart2, label: "ওভারভিউ" },
+  { key: "revenue", icon: TrendingUp, label: "রাজস্ব রিপোর্ট" },
+  { key: "doctor-list", icon: List, label: "ডাক্তার তালিকা" },
+  { key: "approvals", icon: ShieldCheck, label: "ডাক্তার অনুমোদন" },
+  { key: "appointments", icon: Calendar, label: "অ্যাপয়েন্টমেন্ট" },
+  { key: "users", icon: Users, label: "ব্যবহারকারী" },
+  { key: "site-settings", icon: Settings, label: "সাইট সেটিং" },
+];
 
 export default function AdminDashboard() {
+  const [section, setSection] = useState<Section>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navigate = (s: Section) => {
+    setSection(s);
+    setSidebarOpen(false);
+  };
+
+  return (
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <Layout>
+        {/* Top header */}
+        <section className="bg-primary py-4 border-b border-primary/20">
+          <div className="max-w-screen-2xl mx-auto px-4 flex items-center gap-3">
+            <Button variant="ghost" size="sm" className="lg:hidden text-primary-foreground hover:bg-primary-foreground/10 p-1.5"
+              onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <div className="p-1.5 bg-primary-foreground/10 rounded-lg">
+              <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-primary-foreground">অ্যাডমিন প্যানেল</h1>
+              <p className="text-primary-foreground/70 text-xs hidden sm:block">পশুডক প্ল্যাটফর্মের সকল কার্যক্রম পরিচালনা করুন</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="max-w-screen-2xl mx-auto flex min-h-[calc(100vh-120px)]">
+          {/* Sidebar Overlay (mobile) */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          )}
+
+          {/* Sidebar */}
+          <aside className={`
+            fixed lg:static top-0 left-0 h-full z-30 bg-white border-r border-border w-64 shrink-0
+            transform transition-transform duration-200 lg:transform-none
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+          `}>
+            <div className="p-4 pt-20 lg:pt-6">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-2">প্রধান মেনু</p>
+              <nav className="space-y-0.5">
+                {NAV_ITEMS.map(({ key, icon: Icon, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => navigate(key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
+                      ${section === key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent"
+                      }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {label}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+            {section === "overview" && <OverviewSection />}
+            {section === "revenue" && <AdminRevenue />}
+            {section === "doctor-list" && <AdminDoctorList />}
+            {section === "approvals" && <ApprovalsSection />}
+            {section === "appointments" && <AppointmentsSection />}
+            {section === "users" && <UsersSection />}
+            {section === "site-settings" && <AdminSiteSettings />}
+          </main>
+        </div>
+      </Layout>
+    </ProtectedRoute>
+  );
+}
+
+// ─── Overview ─────────────────────────────────────────────────────────────────
+
+function OverviewSection() {
   const { data: stats } = useAdminGetStats({ query: { queryKey: getAdminGetStatsQueryKey() } });
 
   const statCards = [
@@ -33,80 +136,31 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <Layout>
-        {/* Header */}
-        <section className="bg-primary py-10 border-b border-primary/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-primary-foreground/10 rounded-xl">
-                <ShieldCheck className="h-7 w-7 text-primary-foreground" />
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-foreground mb-1">ওভারভিউ</h2>
+        <p className="text-sm text-muted-foreground">প্ল্যাটফর্মের সামগ্রিক অবস্থা</p>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {statCards.map(({ label, value, icon: Icon, color, bg, border }) => (
+          <Card key={label} className={`border ${border} ${bg}`}>
+            <CardContent className="p-4">
+              <div className={`p-2 w-fit rounded-lg ${bg} mb-3`}>
+                <Icon className={`h-5 w-5 ${color}`} />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-primary-foreground">অ্যাডমিন প্যানেল</h1>
-                <p className="text-primary-foreground/70 text-sm">পশুডক প্ল্যাটফর্মের সকল কার্যক্রম পরিচালনা করুন</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            {statCards.map(({ label, value, icon: Icon, color, bg, border }) => (
-              <Card key={label} className={`border ${border} ${bg}`}>
-                <CardContent className="p-4">
-                  <div className={`p-2 w-fit rounded-lg ${bg} mb-3`}>
-                    <Icon className={`h-5 w-5 ${color}`} />
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{value}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Main Tabs */}
-          <Card className="shadow-sm border-border/50">
-            <Tabs defaultValue="doctors">
-              <CardHeader className="border-b border-border pb-0 pt-4 px-4">
-                <TabsList className="h-auto bg-transparent gap-1 p-0 border-b-0 flex-wrap">
-                  {[
-                    { value: "doctors", icon: Stethoscope, label: "ডাক্তার অনুমোদন" },
-                    { value: "appointments", icon: Calendar, label: "অ্যাপয়েন্টমেন্ট" },
-                    { value: "users", icon: Users, label: "ব্যবহারকারী" },
-                  ].map(({ value, icon: Icon, label }) => (
-                    <TabsTrigger
-                      key={value}
-                      value={value}
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none pb-3 px-4 text-muted-foreground"
-                    >
-                      <Icon className="h-4 w-4 mr-1.5" /> {label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </CardHeader>
-
-              <CardContent className="p-6">
-                <TabsContent value="doctors" className="mt-0">
-                  <DoctorsTab />
-                </TabsContent>
-                <TabsContent value="appointments" className="mt-0">
-                  <AppointmentsTab />
-                </TabsContent>
-                <TabsContent value="users" className="mt-0">
-                  <UsersTab />
-                </TabsContent>
-              </CardContent>
-            </Tabs>
+              <p className="text-2xl font-bold text-foreground">{value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            </CardContent>
           </Card>
-        </div>
-      </Layout>
-    </ProtectedRoute>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function DoctorsTab() {
+// ─── Approvals ────────────────────────────────────────────────────────────────
+
+function ApprovalsSection() {
   const { data, isLoading } = useAdminListDoctors({ query: { queryKey: getAdminListDoctorsQueryKey() } });
   const approveDoctor = useApproveDoctor();
   const queryClient = useQueryClient();
@@ -127,13 +181,20 @@ function DoctorsTab() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  const doctors = data?.doctors || [];
-  const pendingDoctors = doctors.filter(d => d.status === "pending");
-  const approvedDoctors = doctors.filter(d => d.status === "approved");
-  const rejectedDoctors = doctors.filter(d => d.status === "rejected");
+  const doctors = Array.isArray(data) ? data : data?.doctors || [];
+  const pendingDoctors = doctors.filter((d: any) => d.status === "pending");
+  const approvedDoctors = doctors.filter((d: any) => d.status === "approved");
+  const rejectedDoctors = doctors.filter((d: any) => d.status === "rejected");
 
   return (
     <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-primary" /> ডাক্তার অনুমোদন
+        </h2>
+        <p className="text-sm text-muted-foreground">নতুন ডাক্তারের আবেদন অনুমোদন বা বাতিল করুন</p>
+      </div>
+
       {/* Pending */}
       <div>
         <div className="flex items-center gap-2 mb-4">
@@ -142,7 +203,7 @@ function DoctorsTab() {
         </div>
         {pendingDoctors.length > 0 ? (
           <div className="grid gap-3">
-            {pendingDoctors.map(doc => (
+            {pendingDoctors.map((doc: any) => (
               <div key={doc.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border border-amber-200 bg-amber-50/50 rounded-xl gap-4">
                 <div className="flex items-start gap-4 flex-1">
                   <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-lg shrink-0">
@@ -153,7 +214,7 @@ function DoctorsTab() {
                     <p className="text-sm text-muted-foreground">{doc.phone} · {doc.district}</p>
                     <p className="text-sm text-muted-foreground">ফি: ৳{doc.consultationFee} · অভিজ্ঞতা: {doc.yearsExperience} বছর</p>
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {doc.specialties.map(s => <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>)}
+                      {doc.specialties.map((s: string) => <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>)}
                     </div>
                   </div>
                 </div>
@@ -175,7 +236,6 @@ function DoctorsTab() {
 
       <Separator />
 
-      {/* Approved & Rejected */}
       <div>
         <h3 className="font-bold text-foreground mb-4">অনুমোদিত ডাক্তার ({approvedDoctors.length})</h3>
         <DoctorTable doctors={approvedDoctors} onStatusChange={handleStatusChange} isPending={approveDoctor.isPending} />
@@ -209,7 +269,7 @@ function DoctorTable({ doctors, onStatusChange, isPending }: { doctors: any[], o
           </tr>
         </thead>
         <tbody>
-          {doctors.map(doc => (
+          {doctors.map((doc: any) => (
             <tr key={doc.id} className="border-t border-border hover:bg-accent/20 transition-colors">
               <td className="px-4 py-3 font-medium">{doc.name}</td>
               <td className="px-4 py-3 text-muted-foreground">{doc.phone}</td>
@@ -238,12 +298,14 @@ function DoctorTable({ doctors, onStatusChange, isPending }: { doctors: any[], o
   );
 }
 
-function AppointmentsTab() {
+// ─── Appointments ─────────────────────────────────────────────────────────────
+
+function AppointmentsSection() {
   const { data, isLoading } = useAdminListAppointments({ query: { queryKey: getAdminListAppointmentsQueryKey() } });
 
   if (isLoading) return <LoadingSpinner />;
 
-  const appointments = data || [];
+  const appointments = Array.isArray(data) ? data : [];
 
   const statusMap: Record<string, { label: string; cls: string }> = {
     confirmed: { label: "নিশ্চিত", cls: "bg-green-50 text-green-700 border-green-200" },
@@ -253,8 +315,13 @@ function AppointmentsTab() {
   };
 
   return (
-    <div>
-      <p className="text-sm text-muted-foreground mb-4">মোট {appointments.length}টি অ্যাপয়েন্টমেন্ট</p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-primary" /> অ্যাপয়েন্টমেন্ট
+        </h2>
+        <p className="text-sm text-muted-foreground">মোট {appointments.length}টি অ্যাপয়েন্টমেন্ট</p>
+      </div>
       {appointments.length === 0 ? (
         <EmptyState message="কোনো অ্যাপয়েন্টমেন্ট নেই" />
       ) : (
@@ -270,7 +337,7 @@ function AppointmentsTab() {
               </tr>
             </thead>
             <tbody>
-              {appointments.map(apt => {
+              {appointments.map((apt: any) => {
                 const s = statusMap[apt.status] || { label: apt.status, cls: "" };
                 return (
                   <tr key={apt.id} className="border-t border-border hover:bg-accent/20 transition-colors">
@@ -295,12 +362,14 @@ function AppointmentsTab() {
   );
 }
 
-function UsersTab() {
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+function UsersSection() {
   const { data, isLoading } = useAdminListUsers({ query: { queryKey: getAdminListUsersQueryKey() } });
 
   if (isLoading) return <LoadingSpinner />;
 
-  const users = data || [];
+  const users = Array.isArray(data) ? data : [];
 
   const roleMap: Record<string, { label: string; cls: string }> = {
     admin: { label: "অ্যাডমিন", cls: "bg-purple-50 text-purple-700 border-purple-200" },
@@ -309,8 +378,13 @@ function UsersTab() {
   };
 
   return (
-    <div>
-      <p className="text-sm text-muted-foreground mb-4">মোট {users.length}জন ব্যবহারকারী</p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" /> ব্যবহারকারী
+        </h2>
+        <p className="text-sm text-muted-foreground">মোট {users.length}জন ব্যবহারকারী</p>
+      </div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead>
@@ -323,7 +397,7 @@ function UsersTab() {
             </tr>
           </thead>
           <tbody>
-            {users.map(user => {
+            {users.map((user: any) => {
               const r = roleMap[user.role] || { label: user.role, cls: "" };
               return (
                 <tr key={user.id} className="border-t border-border hover:bg-accent/20 transition-colors">
@@ -352,6 +426,8 @@ function UsersTab() {
     </div>
   );
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function LoadingSpinner() {
   return (

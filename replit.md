@@ -33,10 +33,24 @@ PashuDoc — একটি ভেটেরিনারি ডাক্তার �
 
 ## Database Schema
 
-- **users** — farmers, doctors, and admin users (role enum: farmer/doctor/admin)
-- **doctors** — doctor profiles with specialties, district, status (pending/approved/rejected)
+- **users** — farmers, doctors, and admin users (role enum: farmer/doctor/admin); has `avatarUrl`
+- **doctors** — doctor profiles with specialties, district, status (pending/approved/rejected); has `chamberAddress`
 - **appointments** — bookings between farmers and doctors
 - **reviews** — star ratings and comments for doctors
+- **site_content** — key-value table for editable site content (navbar, footer, landing page, public pages)
+
+## Admin Panel Features
+
+- **Sidebar navigation** — ওভারভিউ, রাজস্ব, ডাক্তার তালিকা, অনুমোদন, অ্যাপয়েন্টমেন্ট, ব্যবহারকারী, সাইট সেটিং
+- **Revenue Report** — Summary cards (7d, 15d, 30d, 90d, 180d, 365d, all-time) + per-doctor revenue table with period filter
+- **Doctor List** — Filterable table with click-to-details modal (ratings, revenue, reviews)
+- **Site Settings** — TipTap rich text editor for navbar, footer, landing page sections, and all public pages
+- API endpoints: `GET/PUT /admin/site-content`, `GET /admin/revenue/summary`, `GET /admin/revenue/by-doctor`, `GET /admin/doctors/:id/details`
+
+## Rich Text Editor
+
+- TipTap (`@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-underline`, `@tiptap/extension-text-align`)
+- Used in admin Site Settings for public page content editing
 
 ## Seed Data
 
