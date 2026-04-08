@@ -16,6 +16,8 @@ import FarmerDashboard from "@/pages/FarmerDashboard";
 import DoctorDashboard from "@/pages/DoctorDashboard";
 import DoctorRegister from "@/pages/DoctorRegister";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AboutUs from "@/pages/AboutUs";
+import ContactUs from "@/pages/ContactUs";
 
 setAuthTokenGetter(() => getToken());
 
@@ -34,6 +36,8 @@ function Router() {
       <Route path="/doctor/dashboard" component={DoctorDashboard} />
       <Route path="/doctor/register" component={DoctorRegister} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/about" component={AboutUs} />
+      <Route path="/contact" component={ContactUs} />
       <Route component={NotFound} />
     </Switch>
   );

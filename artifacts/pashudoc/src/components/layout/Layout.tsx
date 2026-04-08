@@ -48,6 +48,8 @@ export function Layout({ children }: LayoutProps) {
                 {[
                   { label: "হোম", href: "/" },
                   { label: "ডাক্তার খুঁজুন", href: "/doctors" },
+                  { label: "আমাদের সম্পর্কে", href: "/about" },
+                  { label: "যোগাযোগ করুন", href: "/contact" },
                   { label: "নিবন্ধন করুন", href: "/register" },
                   { label: "লগইন", href: "/login" },
                 ].map(({ label, href }) => (
