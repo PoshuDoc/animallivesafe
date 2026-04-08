@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import {
   useAdminGetStats, getAdminGetStatsQueryKey,
@@ -54,69 +54,86 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
-      <Layout>
-        {/* Top header */}
-        <section className="bg-primary py-4 border-b border-primary/20">
-          <div className="max-w-screen-2xl mx-auto px-4 flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="lg:hidden text-primary-foreground hover:bg-primary-foreground/10 p-1.5"
-              onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-            <div className="p-1.5 bg-primary-foreground/10 rounded-lg">
-              <ShieldCheck className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary-foreground">অ্যাডমিন প্যানেল</h1>
-              <p className="text-primary-foreground/70 text-xs hidden sm:block">পশুডক প্ল্যাটফর্মের সকল কার্যক্রম পরিচালনা করুন</p>
-            </div>
-          </div>
-        </section>
+      <div className="h-screen flex flex-col overflow-hidden bg-background">
+        {/* Shared Navbar */}
+        <Navbar />
 
-        <div className="max-w-screen-2xl mx-auto flex min-h-[calc(100vh-120px)]">
-          {/* Sidebar Overlay (mobile) */}
+        {/* Below Navbar: Admin Layout */}
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* Mobile Overlay */}
           {sidebarOpen && (
             <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
           )}
 
-          {/* Sidebar */}
+          {/* Fixed Sidebar */}
           <aside className={`
-            fixed lg:static top-0 left-0 h-full z-30 bg-white border-r border-border w-64 shrink-0
-            transform transition-transform duration-200 lg:transform-none
+            fixed lg:relative inset-y-0 left-0 z-30
+            w-64 shrink-0 bg-white border-r border-border
+            flex flex-col overflow-hidden
+            transform transition-transform duration-200
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+            top-16 lg:top-auto h-[calc(100vh-64px)] lg:h-full
           `}>
-            <div className="p-4 pt-20 lg:pt-6">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-2">প্রধান মেনু</p>
-              <nav className="space-y-0.5">
-                {NAV_ITEMS.map(({ key, icon: Icon, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => navigate(key)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
-                      ${section === key
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-accent"
-                      }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {label}
-                  </button>
-                ))}
-              </nav>
+            {/* Admin Panel Header inside Sidebar */}
+            <div className="bg-primary px-4 py-4 flex items-center gap-2.5 shrink-0">
+              <Button variant="ghost" size="sm" className="lg:hidden text-primary-foreground hover:bg-primary-foreground/10 p-1 mr-1"
+                onClick={() => setSidebarOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+              <div className="p-1.5 bg-primary-foreground/15 rounded-lg">
+                <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-primary-foreground leading-tight">অ্যাডমিন প্যানেল</p>
+                <p className="text-primary-foreground/60 text-[10px]">পশুডক পরিচালনা</p>
+              </div>
             </div>
+
+            {/* Nav Items */}
+            <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-1.5 pt-1">প্রধান মেনু</p>
+              {NAV_ITEMS.map(({ key, icon: Icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => navigate(key)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
+                    ${section === key
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-foreground hover:bg-accent"
+                    }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </button>
+              ))}
+            </nav>
           </aside>
 
-          {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-            {section === "overview" && <OverviewSection />}
-            {section === "revenue" && <AdminRevenue />}
-            {section === "doctor-list" && <AdminDoctorList />}
-            {section === "approvals" && <ApprovalsSection />}
-            {section === "appointments" && <AppointmentsSection />}
-            {section === "users" && <UsersSection />}
-            {section === "site-settings" && <AdminSiteSettings />}
-          </main>
+          {/* Main Content (scrollable) */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Mobile Header Bar */}
+            <div className="lg:hidden bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 p-1.5"
+                onClick={() => setSidebarOpen(true)}>
+                <Menu className="h-5 w-5" />
+              </Button>
+              <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+              <span className="text-sm font-bold text-primary-foreground">অ্যাডমিন প্যানেল</span>
+            </div>
+
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+              {section === "overview" && <OverviewSection />}
+              {section === "revenue" && <AdminRevenue />}
+              {section === "doctor-list" && <AdminDoctorList />}
+              {section === "approvals" && <ApprovalsSection />}
+              {section === "appointments" && <AppointmentsSection />}
+              {section === "users" && <UsersSection />}
+              {section === "site-settings" && <AdminSiteSettings />}
+            </main>
+          </div>
         </div>
-      </Layout>
+      </div>
     </ProtectedRoute>
   );
 }
