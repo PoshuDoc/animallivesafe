@@ -18,6 +18,9 @@ import DoctorRegister from "@/pages/DoctorRegister";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfUse from "@/pages/TermsOfUse";
+import Mission from "@/pages/Mission";
 
 setAuthTokenGetter(() => getToken());
 
@@ -38,6 +41,9 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/about" component={AboutUs} />
       <Route path="/contact" component={ContactUs} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={TermsOfUse} />
+      <Route path="/mission" component={Mission} />
       <Route component={NotFound} />
     </Switch>
   );

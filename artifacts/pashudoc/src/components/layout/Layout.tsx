@@ -140,8 +140,9 @@ export function Layout({ children }: LayoutProps) {
               &copy; {new Date().getFullYear()} পশুডক. সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-privacy">গোপনীয়তা নীতি</a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-terms">ব্যবহারের শর্তাবলী</a>
+              <Link href="/mission" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-mission">আমাদের মিশন</Link>
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-privacy">গোপনীয়তা নীতি</Link>
+              <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-terms">ব্যবহারের শর্তাবলী</Link>
             </div>
           </div>
         </div>
