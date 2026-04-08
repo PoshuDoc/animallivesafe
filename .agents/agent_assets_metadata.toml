@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "uUjccFE1Jh-gcnRABpUqg"
+uri = "file://docs/PashuDoc-Documentation.docx"
+type = "word_document"
+title = "পশুডক প্রজেক্ট ডকুমেন্টেশন"
