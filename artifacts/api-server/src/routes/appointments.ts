@@ -128,7 +128,7 @@ router.post("/appointments", requireAuth, async (req, res) => {
 });
 
 router.get("/appointments/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
@@ -147,7 +147,7 @@ router.get("/appointments/:id", requireAuth, async (req, res) => {
 });
 
 router.patch("/appointments/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;

@@ -84,7 +84,7 @@ router.get("/admin/doctors", async (req, res) => {
 // ─── Doctor Full Details ──────────────────────────────────────────────────────
 
 router.get("/admin/doctors/:id/details", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   try {
     const [row] = await db
@@ -141,7 +141,7 @@ router.get("/admin/doctors/:id/details", async (req, res) => {
 // ─── Doctor Approve ───────────────────────────────────────────────────────────
 
 router.patch("/admin/doctors/:id/approve", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { status, isFeatured } = req.body;
   if (!["approved", "rejected"].includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
@@ -318,7 +318,7 @@ router.get("/admin/stats", async (req, res) => {
 // ─── Reviews ─────────────────────────────────────────────────────────────────
 
 router.delete("/admin/reviews/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   try {
     await db.delete(reviewsTable).where(eq(reviewsTable.id, id));
@@ -359,7 +359,7 @@ router.post("/admin/faqs", async (req, res) => {
 });
 
 router.put("/admin/faqs/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { question, answer, order, isActive } = req.body;
   try {
@@ -378,7 +378,7 @@ router.put("/admin/faqs/:id", async (req, res) => {
 });
 
 router.delete("/admin/faqs/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   try {
     await db.delete(faqsTable).where(eq(faqsTable.id, id));

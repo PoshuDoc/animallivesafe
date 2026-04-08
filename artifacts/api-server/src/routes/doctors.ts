@@ -295,7 +295,7 @@ router.get("/doctors/me/revenue", requireAuth, async (req, res) => {
 });
 
 router.get("/doctors/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
@@ -356,7 +356,7 @@ router.post("/doctors", requireAuth, async (req, res) => {
 });
 
 router.patch("/doctors/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   const { userId } = (req as Request & { user: JwtPayload }).user;
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
@@ -388,7 +388,7 @@ router.patch("/doctors/:id", requireAuth, async (req, res) => {
 });
 
 router.get("/doctors/:id/reviews", async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
