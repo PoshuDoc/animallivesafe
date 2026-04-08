@@ -2,12 +2,13 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useGetStats, getGetStatsQueryKey, useListFeaturedDoctors, getListFeaturedDoctorsQueryKey } from "@workspace/api-client-react";
-import { Search, MapPin, Stethoscope, Star, ChevronRight, Activity, Users, CalendarCheck, ShieldCheck } from "lucide-react";
+import { Search, MapPin, Stethoscope, Star, ChevronRight, Activity, Users, CalendarCheck, ShieldCheck, ChevronDown, PhoneCall, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DISTRICTS, ANIMAL_TYPES, getAnimalIcon } from "@/lib/constants";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -254,7 +255,6 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
-            {/* Connecting line for desktop */}
             <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-border z-0"></div>
             
             <div className="relative z-10 text-center bg-card">
@@ -279,6 +279,124 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3">৩. চিকিৎসা নিন</h3>
               <p className="text-muted-foreground">নির্ধারিত সময়ে ডাক্তারের সাথে দেখা করুন বা ফোনে কথা বলুন</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-background border-t border-border" data-testid="section-faq">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <Badge variant="outline" className="mb-4 border-primary text-primary bg-primary/5 px-4 py-1 text-sm font-medium">
+              সাধারণ প্রশ্ন
+            </Badge>
+            <h2 className="text-3xl font-bold text-foreground mb-4">প্রায়ই জিজ্ঞাসিত প্রশ্নসমূহ</h2>
+            <p className="text-muted-foreground text-lg">পশুডক সম্পর্কে আপনার মনে যা প্রশ্ন আসতে পারে</p>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-3">
+            <AccordionItem value="faq-1" className="border border-border rounded-xl px-6 bg-card shadow-sm" data-testid="faq-item-1">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                পশুডক কি সম্পূর্ণ বিনামূল্যে ব্যবহার করা যায়?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                হ্যাঁ, কৃষক ও পশুর মালিকদের জন্য পশুডক ব্যবহার সম্পূর্ণ বিনামূল্যে। ডাক্তার খোঁজা, প্রোফাইল দেখা এবং অ্যাপয়েন্টমেন্ট বুক করা — সব কিছুই ফ্রি। ডাক্তারের পরামর্শ ফি সরাসরি ডাক্তারকে দেওয়া হয়, আমরা কোনো কমিশন নেই না।
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="faq-2" className="border border-border rounded-xl px-6 bg-card shadow-sm" data-testid="faq-item-2">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                আমি কি ডাক্তার হিসেবে নিবন্ধন করতে পারি?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                হ্যাঁ। যেকোনো সরকারি-স্বীকৃত ভেটেরিনারি ডাক্তার নিবন্ধন করতে পারেন। রেজিস্ট্রেশনের পর আমাদের টিম আপনার সার্টিফিকেট যাচাই করবে এবং ২৪-৪৮ ঘণ্টার মধ্যে প্রোফাইল অনুমোদন দেওয়া হবে। অনুমোদনের পরেই আপনার প্রোফাইল সার্চে দেখা যাবে।
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="faq-3" className="border border-border rounded-xl px-6 bg-card shadow-sm" data-testid="faq-item-3">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                অ্যাপয়েন্টমেন্ট বাতিল করলে কী হবে?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                আপনি যেকোনো সময় আপনার ড্যাশবোর্ড থেকে অ্যাপয়েন্টমেন্ট বাতিল করতে পারবেন। অ্যাপয়েন্টমেন্টের সময়ের আগে বাতিল করলে ডাক্তার স্বয়ংক্রিয়ভাবে জানতে পারবেন। আমরা ব্যবহারকারীদের অনুরোধ করি অন্তত ২ ঘণ্টা আগে বাতিল করতে।
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="faq-4" className="border border-border rounded-xl px-6 bg-card shadow-sm" data-testid="faq-item-4">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                কোন কোন ধরনের পশুর জন্য ডাক্তার পাওয়া যাবে?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                পশুডকে গরু, ছাগল, মহিষ, ভেড়া, হাঁস, মুরগি, কুকুর ও বিড়ালের জন্য বিশেষজ্ঞ ডাক্তার পাওয়া যায়। আপনি পশুর ধরন দিয়ে ফিল্টার করে নিজের প্রয়োজন অনুযায়ী ডাক্তার খুঁজে নিতে পারবেন।
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="faq-5" className="border border-border rounded-xl px-6 bg-card shadow-sm" data-testid="faq-item-5">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                আমার এলাকায় ডাক্তার না থাকলে কী করব?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                কাছের জেলার ডাক্তার খুঁজুন। অনেক ডাক্তার ফোনে প্রাথমিক পরামর্শ দেন। ডাক্তারের কার্ডে থাকা "কল করুন" বাটনে চাপ দিলেই সরাসরি কথা বলতে পারবেন। এছাড়া আপনি অনুরোধ করতে পারেন — আমরা আপনার এলাকায় ডাক্তার যোগ করার চেষ্টা করব।
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-primary text-primary-foreground" data-testid="section-cta">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-5 leading-tight">
+                আজই শুরু করুন — <br className="hidden sm:block" />
+                আপনার পশুর সুস্বাস্থ্য নিশ্চিত করুন
+              </h2>
+              <p className="text-primary-foreground/80 text-lg mb-8 leading-relaxed">
+                হাজার হাজার কৃষক ইতিমধ্যেই পশুডক ব্যবহার করে তাদের গবাদি পশুর সঠিক চিকিৎসা নিশ্চিত করছেন। আপনিও যোগ দিন।
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-14 px-8 text-base font-semibold hover-elevate shadow-lg"
+                  asChild
+                  data-testid="cta-button-register"
+                >
+                  <Link href="/register">
+                    এখনই নিবন্ধন করুন
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-base font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  asChild
+                  data-testid="cta-button-find-doctor"
+                >
+                  <Link href="/doctors">
+                    <Search className="mr-2 h-5 w-5" />
+                    ডাক্তার খুঁজুন
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: ShieldCheck, title: "যাচাইকৃত ডাক্তার", desc: "সকল ডাক্তার সার্টিফিকেট যাচাই করে অনুমোদিত" },
+                { icon: CalendarCheck, title: "সহজ বুকিং", desc: "মাত্র কয়েক ক্লিকে অ্যাপয়েন্টমেন্ট নিন" },
+                { icon: PhoneCall, title: "সরাসরি যোগাযোগ", desc: "এক বাটনে ডাক্তারকে সরাসরি কল করুন" },
+                { icon: Star, title: "রেটিং ও রিভিউ", desc: "অন্য কৃষকদের অভিজ্ঞতা দেখে সিদ্ধান্ত নিন" },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="bg-primary-foreground/10 rounded-xl p-5 border border-primary-foreground/20">
+                  <Icon className="h-7 w-7 mb-3 text-primary-foreground/80" />
+                  <h4 className="font-bold text-sm mb-1">{title}</h4>
+                  <p className="text-primary-foreground/70 text-xs leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
