@@ -2,15 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 
 const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
+const NO_CACHE: RequestInit = { cache: "no-store" };
+
 export function useSiteContent() {
   return useQuery<Record<string, string>>({
     queryKey: ["site-content"],
     queryFn: async () => {
-      const res = await fetch(`${API}/api/site-content`);
+      const res = await fetch(`${API}/api/site-content`, NO_CACHE);
       if (!res.ok) return {};
       return res.json();
     },
     staleTime: 0,
+    gcTime: 0,
   });
 }
 
@@ -26,10 +29,11 @@ export function useFaqs() {
   return useQuery<FaqItem[]>({
     queryKey: ["faqs"],
     queryFn: async () => {
-      const res = await fetch(`${API}/api/faqs`);
+      const res = await fetch(`${API}/api/faqs`, NO_CACHE);
       if (!res.ok) return [];
       return res.json();
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 0,
   });
 }

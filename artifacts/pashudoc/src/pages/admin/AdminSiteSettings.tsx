@@ -15,6 +15,7 @@ const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("pashudoc_token");
   return fetch(`${API}${path}`, {
+    cache: "no-store",
     ...opts,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(opts?.headers ?? {}) },
   }).then(r => r.json());

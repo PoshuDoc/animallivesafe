@@ -14,6 +14,7 @@ const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("pashudoc_token");
   return fetch(`${API}${path}`, {
+    cache: "no-store",
     ...opts,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(opts?.headers ?? {}) },
   });
@@ -49,8 +50,11 @@ export function AdminFaq() {
     queryFn: async () => {
       const res = await apiFetch("/api/admin/faqs");
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const createMutation = useMutation({
