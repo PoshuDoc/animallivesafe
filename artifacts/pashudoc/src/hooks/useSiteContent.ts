@@ -13,7 +13,6 @@ export function useSiteContent() {
       return res.json();
     },
     staleTime: 0,
-    gcTime: 0,
   });
 }
 
@@ -31,9 +30,9 @@ export function useFaqs() {
     queryFn: async () => {
       const res = await fetch(`${API}/api/faqs`, NO_CACHE);
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 0,
-    gcTime: 0,
   });
 }

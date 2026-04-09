@@ -54,7 +54,6 @@ export function AdminFaq() {
       return Array.isArray(data) ? data : [];
     },
     staleTime: 0,
-    gcTime: 0,
   });
 
   const createMutation = useMutation({
