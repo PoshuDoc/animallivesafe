@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Navigation, Layout, FileText, Globe, Save, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Settings, Navigation, Layout, FileText, Globe, Save, Plus, Trash2, ExternalLink, Megaphone } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { PAGE_DEFAULTS } from "@/lib/pageDefaults";
 
@@ -77,6 +77,8 @@ const DEFAULTS: Record<string, string> = {
   terms_hero_title: "ব্যবহারের শর্তাবলী",
   terms_hero_subtitle: "পশুডক ব্যবহার করার আগে অনুগ্রহ করে এই শর্তাবলী পড়ুন।",
   page_terms_content: PAGE_DEFAULTS.terms,
+  adsense_publisher_id: "",
+  adsense_enabled: "false",
 };
 
 type SocialLink = { platform: string; url: string; label: string };
@@ -192,6 +194,7 @@ export function AdminSiteSettings() {
             { value: "footer", icon: Layout, label: "ফুটার" },
             { value: "landing", icon: Globe, label: "হোমপেজ" },
             { value: "pages", icon: FileText, label: "পেজ কন্টেন্ট" },
+            { value: "adsense", icon: Megaphone, label: "AdSense" },
           ].map(({ value, icon: Icon, label }) => (
             <TabsTrigger key={value} value={value} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm">
               <Icon className="h-4 w-4 mr-1.5" />{label}
@@ -514,6 +517,82 @@ export function AdminSiteSettings() {
               </div>
             </TabsContent>
           </Tabs>
+        </TabsContent>
+
+        {/* ─── AdSense ─────────────────────────────────── */}
+        <TabsContent value="adsense" className="mt-4">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  Google AdSense সেটিং
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-2">
+                  <p className="text-sm font-medium text-amber-800">AdSense apply করার ধাপ:</p>
+                  <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
+                    <li>সাইট live করুন (Vercel-এ deploy করুন)</li>
+                    <li><a href="https://adsense.google.com" target="_blank" rel="noopener noreferrer" className="underline font-medium inline-flex items-center gap-1">adsense.google.com <ExternalLink className="h-3 w-3" /></a> — এ যান এবং সাইটের URL দিয়ে apply করুন</li>
+                    <li>Google আপনার site review করবে (৩–১৪ দিন)</li>
+                    <li>Approval পেলে Publisher ID (pub-XXXXXXXXXX) নিচে paste করুন</li>
+                    <li>Enable করুন — AdSense script স্বয়ংক্রিয়ভাবে সাইটে যোগ হবে</li>
+                  </ol>
+                </div>
+
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
+                  <p className="text-sm font-medium text-blue-800">ads.txt ফাইল (অবশ্যই করতে হবে):</p>
+                  <p className="text-sm text-blue-700">Approval পাওয়ার পর <code className="bg-blue-100 px-1 rounded text-xs font-mono">public/ads.txt</code> ফাইলে নিচের লাইন যোগ করুন:</p>
+                  <div className="bg-blue-900 text-blue-100 rounded p-2 text-xs font-mono">
+                    google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+                  </div>
+                  <p className="text-xs text-blue-600">(pub-XXXXXXXXXX এর জায়গায় আপনার আসল Publisher ID বসান)</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Publisher ID (pub-XXXXXXXXXXXXXXXX)</Label>
+                    <Input
+                      value={content.adsense_publisher_id ?? ""}
+                      onChange={e => set("adsense_publisher_id", e.target.value)}
+                      placeholder="pub-1234567890123456"
+                      className="text-sm font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">Google AdSense dashboard থেকে Publisher ID কপি করুন</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <input
+                      type="checkbox"
+                      id="adsense-enabled"
+                      checked={content.adsense_enabled === "true"}
+                      onChange={e => set("adsense_enabled", e.target.checked ? "true" : "false")}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    <div>
+                      <label htmlFor="adsense-enabled" className="text-sm font-medium cursor-pointer">AdSense সক্রিয় করুন</label>
+                      <p className="text-xs text-muted-foreground">Publisher ID দেওয়ার পর এটি চালু করুন</p>
+                    </div>
+                  </div>
+
+                  <SaveButton onClick={() => saveSection(["adsense_publisher_id", "adsense_enabled"])} loading={saveMutation.isPending} />
+                </div>
+
+                <div className="rounded-lg bg-green-50 border border-green-200 p-4 space-y-2">
+                  <p className="text-sm font-medium text-green-800">Approval পেতে সাইটে যা থাকা জরুরি:</p>
+                  <ul className="text-sm text-green-700 space-y-1 list-disc list-inside">
+                    <li>মৌলিক বাংলা কন্টেন্ট (কপি করা নয়)</li>
+                    <li>গোপনীয়তা নীতি পেজ (আছে)</li>
+                    <li>যোগাযোগ পেজ (আছে)</li>
+                    <li>কমপক্ষে ৩–৬ মাসের পুরনো ডোমেইন (ভারত/বাংলাদেশের জন্য)</li>
+                    <li>পর্যাপ্ত মৌলিক কন্টেন্ট ও নিয়মিত ব্যবহারকারী</li>
+                    <li>প্রতিদিন কিছু ট্র্যাফিক (Google Search Console-এ যুক্ত করুন)</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

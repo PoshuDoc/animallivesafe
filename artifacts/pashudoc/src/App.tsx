@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { getToken } from "@/lib/auth";
+import { useAdSense } from "@/hooks/useAdSense";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -59,14 +60,23 @@ function Router() {
   );
 }
 
+function AppInner() {
+  useAdSense();
+  return (
+    <>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <Router />
+      </WouterRouter>
+      <Toaster />
+    </>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <AppInner />
       </TooltipProvider>
     </QueryClientProvider>
   );
