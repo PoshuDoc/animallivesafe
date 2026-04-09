@@ -56,24 +56,44 @@ router.use(requireAuth, requireRole("admin"));
 router.get("/admin/doctors", async (req, res) => {
   const { status } = req.query as { status?: string };
   try {
-    const rows = await db
-      .select()
-      .from(doctorsTable)
-      .innerJoin(usersTable, eq(doctorsTable.userId, usersTable.id))
-      .where(status ? eq(doctorsTable.status, status as "pending" | "approved" | "rejected") : undefined);
-
-    const result = await Promise.all(rows.map(async (row) => {
-      const [ratingRow] = await db
-        .select({ avg: avg(reviewsTable.rating), cnt: count() })
-        .from(reviewsTable)
-        .where(eq(reviewsTable.doctorId, row.doctors.id));
-      const [{ aptCnt }] = await db
-        .select({ aptCnt: count() })
-        .from(appointmentsTable)
-        .where(eq(appointmentsTable.doctorId, row.doctors.id));
-      return formatDoctor(row.doctors, row.users, ratingRow?.avg ? parseFloat(ratingRow.avg) : 0, ratingRow?.cnt ?? 0, aptCnt ?? 0);
+    const rows = await db.execute(sql`
+      SELECT
+        d.id, d.user_id, d.specialties, d.district, d.upazila, d.clinic_name,
+        d.chamber_address, d.bio, d.years_experience, d.consultation_fee,
+        d.status, d.is_featured, d.created_at as doctor_created_at,
+        u.name, u.phone, u.avatar_url,
+        COALESCE(AVG(r.rating), 0)::float as avg_rating,
+        COUNT(DISTINCT r.id)::int as review_count,
+        COUNT(DISTINCT a.id)::int as appointment_count
+      FROM doctors d
+      JOIN users u ON d.user_id = u.id
+      LEFT JOIN reviews r ON r.doctor_id = d.id
+      LEFT JOIN appointments a ON a.doctor_id = d.id
+      ${status ? sql`WHERE d.status = ${status}` : sql``}
+      GROUP BY d.id, u.name, u.phone, u.avatar_url
+      ORDER BY d.created_at DESC
+    `);
+    const result = rows.rows.map((row: Record<string, unknown>) => ({
+      id: row.id,
+      userId: row.user_id,
+      name: row.name,
+      phone: row.phone,
+      specialties: row.specialties,
+      district: row.district,
+      upazila: row.upazila,
+      clinicName: row.clinic_name,
+      chamberAddress: row.chamber_address,
+      bio: row.bio,
+      yearsExperience: row.years_experience,
+      consultationFee: row.consultation_fee,
+      status: row.status,
+      isFeatured: row.is_featured,
+      avatarUrl: row.avatar_url,
+      averageRating: Number(row.avg_rating ?? 0),
+      totalReviews: Number(row.review_count ?? 0),
+      totalAppointments: Number(row.appointment_count ?? 0),
+      createdAt: row.doctor_created_at,
     }));
-
     res.json(result);
   } catch (err) {
     req.log.error(err);
@@ -206,39 +226,31 @@ router.get("/admin/revenue/by-doctor", async (req, res) => {
   const { period = "all" } = req.query as { period?: string };
   const since = periodToDate(period);
   try {
-    const rows = await db
-      .select()
-      .from(doctorsTable)
-      .innerJoin(usersTable, eq(doctorsTable.userId, usersTable.id));
-
-    const result = await Promise.all(rows.map(async (row) => {
-      const whereClause = since
-        ? and(
-            eq(appointmentsTable.doctorId, row.doctors.id),
-            eq(appointmentsTable.status, "completed"),
-            gte(sql`${appointmentsTable.appointmentDate}::date`, sql`${since.toISOString().split("T")[0]}::date`)
-          )
-        : and(eq(appointmentsTable.doctorId, row.doctors.id), eq(appointmentsTable.status, "completed"));
-
-      const [{ aptCnt }] = await db
-        .select({ aptCnt: count() })
-        .from(appointmentsTable)
-        .where(whereClause);
-
-      return {
-        doctorId: row.doctors.id,
-        name: row.users.name,
-        phone: row.users.phone,
-        district: row.doctors.district,
-        specialties: row.doctors.specialties,
-        consultationFee: row.doctors.consultationFee,
-        completedAppointments: aptCnt ?? 0,
-        revenue: (aptCnt ?? 0) * (row.doctors.consultationFee ?? 0),
-        status: row.doctors.status,
-      };
+    const rows = await db.execute(sql`
+      SELECT
+        d.id as doctor_id, u.name, u.phone, d.district, d.specialties,
+        d.consultation_fee, d.status,
+        COUNT(a.id)::int as completed_appointments,
+        (COUNT(a.id) * d.consultation_fee)::int as revenue
+      FROM doctors d
+      JOIN users u ON d.user_id = u.id
+      LEFT JOIN appointments a ON a.doctor_id = d.id
+        AND a.status = 'completed'
+        ${since ? sql`AND a.appointment_date::date >= ${since.toISOString().split("T")[0]}::date` : sql``}
+      GROUP BY d.id, u.name, u.phone
+      ORDER BY revenue DESC
+    `);
+    const result = rows.rows.map((row: Record<string, unknown>) => ({
+      doctorId: row.doctor_id,
+      name: row.name,
+      phone: row.phone,
+      district: row.district,
+      specialties: row.specialties,
+      consultationFee: row.consultation_fee,
+      completedAppointments: Number(row.completed_appointments ?? 0),
+      revenue: Number(row.revenue ?? 0),
+      status: row.status,
     }));
-
-    result.sort((a, b) => b.revenue - a.revenue);
     res.json(result);
   } catch (err) {
     req.log.error(err);
@@ -250,25 +262,33 @@ router.get("/admin/revenue/by-doctor", async (req, res) => {
 
 router.get("/admin/appointments", async (req, res) => {
   try {
-    const appts = await db.select().from(appointmentsTable).orderBy(desc(appointmentsTable.createdAt));
-    const formatted = await Promise.all(appts.map(async (appt) => {
-      const [farmer] = await db.select().from(usersTable).where(eq(usersTable.id, appt.farmerId)).limit(1);
-      const [doctor] = await db.select().from(doctorsTable).where(eq(doctorsTable.id, appt.doctorId)).limit(1);
-      const [doctorUser] = doctor ? await db.select().from(usersTable).where(eq(usersTable.id, doctor.userId)).limit(1) : [null];
-      return {
-        id: appt.id,
-        farmerId: appt.farmerId,
-        doctorId: appt.doctorId,
-        farmerName: farmer?.name ?? "Unknown",
-        doctorName: doctorUser?.name ?? "Unknown",
-        animalType: appt.animalType,
-        animalDescription: appt.animalDescription,
-        appointmentDate: appt.appointmentDate,
-        appointmentTime: appt.appointmentTime,
-        status: appt.status,
-        notes: appt.notes,
-        createdAt: appt.createdAt,
-      };
+    const rows = await db.execute(sql`
+      SELECT
+        a.id, a.farmer_id, a.doctor_id, a.animal_type, a.animal_description,
+        a.appointment_date, a.appointment_time, a.status, a.notes, a.created_at,
+        fu.name as farmer_name,
+        du.name as doctor_name,
+        d.consultation_fee
+      FROM appointments a
+      JOIN users fu ON a.farmer_id = fu.id
+      JOIN doctors d ON a.doctor_id = d.id
+      JOIN users du ON d.user_id = du.id
+      ORDER BY a.created_at DESC
+    `);
+    const formatted = rows.rows.map((row: Record<string, unknown>) => ({
+      id: row.id,
+      farmerId: row.farmer_id,
+      doctorId: row.doctor_id,
+      farmerName: row.farmer_name ?? "Unknown",
+      doctorName: row.doctor_name ?? "Unknown",
+      animalType: row.animal_type,
+      animalDescription: row.animal_description,
+      appointmentDate: row.appointment_date,
+      appointmentTime: row.appointment_time,
+      status: row.status,
+      notes: row.notes,
+      consultationFee: row.consultation_fee,
+      createdAt: row.created_at,
     }));
     res.json(formatted);
   } catch (err) {
@@ -300,15 +320,25 @@ router.get("/admin/users", async (req, res) => {
 
 router.get("/admin/stats", async (req, res) => {
   try {
-    const [{ totalUsers }] = await db.select({ totalUsers: count() }).from(usersTable);
-    const [{ totalDoctors }] = await db.select({ totalDoctors: count() }).from(doctorsTable);
-    const [{ pendingDoctors }] = await db.select({ pendingDoctors: count() }).from(doctorsTable).where(eq(doctorsTable.status, "pending"));
-    const [{ approvedDoctors }] = await db.select({ approvedDoctors: count() }).from(doctorsTable).where(eq(doctorsTable.status, "approved"));
-    const [{ totalAppointments }] = await db.select({ totalAppointments: count() }).from(appointmentsTable);
-    const [{ completedAppointments }] = await db.select({ completedAppointments: count() }).from(appointmentsTable).where(eq(appointmentsTable.status, "completed"));
-    const [{ totalReviews }] = await db.select({ totalReviews: count() }).from(reviewsTable);
-
-    res.json({ totalUsers, totalDoctors, pendingDoctors, approvedDoctors, totalAppointments, completedAppointments, totalReviews });
+    const [row] = (await db.execute(sql`
+      SELECT
+        (SELECT COUNT(*)::int FROM users) as total_users,
+        (SELECT COUNT(*)::int FROM doctors) as total_doctors,
+        (SELECT COUNT(*)::int FROM doctors WHERE status = 'pending') as pending_doctors,
+        (SELECT COUNT(*)::int FROM doctors WHERE status = 'approved') as approved_doctors,
+        (SELECT COUNT(*)::int FROM appointments) as total_appointments,
+        (SELECT COUNT(*)::int FROM appointments WHERE status = 'completed') as completed_appointments,
+        (SELECT COUNT(*)::int FROM reviews) as total_reviews
+    `)).rows as Record<string, unknown>[];
+    res.json({
+      totalUsers: Number(row.total_users ?? 0),
+      totalDoctors: Number(row.total_doctors ?? 0),
+      pendingDoctors: Number(row.pending_doctors ?? 0),
+      approvedDoctors: Number(row.approved_doctors ?? 0),
+      totalAppointments: Number(row.total_appointments ?? 0),
+      completedAppointments: Number(row.completed_appointments ?? 0),
+      totalReviews: Number(row.total_reviews ?? 0),
+    });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get admin stats" });
