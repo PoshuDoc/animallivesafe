@@ -2,12 +2,16 @@ import { Navbar } from "./Navbar";
 import { Link } from "wouter";
 import { Stethoscope, MapPin, Phone, Mail, Facebook, Youtube } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { data: sc = {} } = useSiteContent();
+  const c = (key: string, fallback: string) => sc[key] || fallback;
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground font-sans">
       <Navbar />
@@ -29,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
                 <span className="text-2xl font-bold text-primary">পশুডক</span>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed mb-5">
-                বাংলাদেশের কৃষক ও পশুপালকদের জন্য বিশ্বস্ত ভেটেরিনারি সেবা প্ল্যাটফর্ম। সারাদেশে অভিজ্ঞ পশু চিকিৎসকদের সাথে সহজে সংযুক্ত হন।
+                {c("footer_tagline", "বাংলাদেশের কৃষক ও পশুপালকদের জন্য বিশ্বস্ত ভেটেরিনারি সেবা প্ল্যাটফর্ম।")}
               </p>
               <div className="flex gap-3">
                 <a href="#" className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" data-testid="link-facebook" aria-label="Facebook">
@@ -111,7 +115,7 @@ export function Layout({ children }: LayoutProps) {
                   <Phone className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-foreground">হেল্পলাইন</p>
-                    <p className="text-sm text-muted-foreground">01700-000000</p>
+                    <p className="text-sm text-muted-foreground">{c("footer_phone", "০১৭০০-০০০০০০")}</p>
                     <p className="text-xs text-muted-foreground">(সকাল ৮টা — রাত ৮টা)</p>
                   </div>
                 </li>
@@ -119,14 +123,14 @@ export function Layout({ children }: LayoutProps) {
                   <Mail className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-foreground">ইমেইল</p>
-                    <p className="text-sm text-muted-foreground">support@pashudoc.com.bd</p>
+                    <p className="text-sm text-muted-foreground">{c("footer_email", "support@pashudoc.com")}</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-foreground">ঠিকানা</p>
-                    <p className="text-sm text-muted-foreground">ঢাকা, বাংলাদেশ</p>
+                    <p className="text-sm text-muted-foreground">{c("footer_address", "ঢাকা, বাংলাদেশ")}</p>
                   </div>
                 </li>
               </ul>
@@ -137,7 +141,7 @@ export function Layout({ children }: LayoutProps) {
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} পশুডক. সর্বস্বত্ব সংরক্ষিত।
+              {c("footer_copyright", `© ${new Date().getFullYear()} পশুডক। সর্বস্বত্ব সংরক্ষিত।`)}
             </p>
             <div className="flex gap-6">
               <Link href="/mission" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="footer-mission">আমাদের মিশন</Link>

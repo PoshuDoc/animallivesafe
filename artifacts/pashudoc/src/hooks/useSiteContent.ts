@@ -10,7 +10,7 @@ export function useSiteContent() {
       if (!res.ok) return {};
       return res.json();
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 }
 

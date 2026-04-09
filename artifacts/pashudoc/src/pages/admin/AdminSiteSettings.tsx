@@ -65,6 +65,7 @@ export function AdminSiteSettings() {
   const { data: savedContent, isLoading, isFetched } = useQuery({
     queryKey: ["admin-site-content"],
     queryFn: () => apiFetch("/api/admin/site-content"),
+    staleTime: 0,
   });
 
   const [content, setContent] = useState<Record<string, string>>(() => ({ ...DEFAULTS }));
@@ -85,6 +86,7 @@ export function AdminSiteSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-site-content"] });
+      queryClient.invalidateQueries({ queryKey: ["site-content"] });
       toast({ title: "সফল", description: "সাইট কন্টেন্ট সংরক্ষিত হয়েছে" });
     },
     onError: () => {
