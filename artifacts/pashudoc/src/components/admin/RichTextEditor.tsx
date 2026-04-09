@@ -32,10 +32,12 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   });
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "");
+    if (!editor) return;
+    const currentHtml = editor.getHTML();
+    if (value && value !== currentHtml) {
+      editor.commands.setContent(value, false);
     }
-  }, [value]);
+  }, [value, editor]);
 
   if (!editor) return null;
 

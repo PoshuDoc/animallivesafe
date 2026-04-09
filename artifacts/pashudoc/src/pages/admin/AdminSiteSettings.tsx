@@ -62,20 +62,18 @@ export function AdminSiteSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: savedContent, isLoading } = useQuery({
+  const { data: savedContent, isLoading, isFetched } = useQuery({
     queryKey: ["admin-site-content"],
     queryFn: () => apiFetch("/api/admin/site-content"),
   });
 
-  const [content, setContent] = useState<Record<string, string>>({});
+  const [content, setContent] = useState<Record<string, string>>(() => ({ ...DEFAULTS }));
 
   useEffect(() => {
-    if (savedContent) {
-      setContent({ ...DEFAULTS, ...savedContent });
-    } else {
-      setContent({ ...DEFAULTS });
+    if (isFetched) {
+      setContent({ ...DEFAULTS, ...(savedContent ?? {}) });
     }
-  }, [savedContent]);
+  }, [savedContent, isFetched]);
 
   const saveMutation = useMutation({
     mutationFn: async (updates: Record<string, string>) => {
@@ -281,6 +279,7 @@ export function AdminSiteSettings() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <RichTextEditor
+                      key={isFetched ? `loaded-${key}` : `empty-${key}`}
                       value={content[key] ?? ""}
                       onChange={v => set(key, v)}
                     />
