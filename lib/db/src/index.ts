@@ -10,20 +10,28 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const isSupabase = process.env.DATABASE_URL.includes("supabase.com");
-const isProduction = process.env.NODE_ENV === "production";
+function parseConnectionString(url: string): pg.PoolConfig {
+  try {
+    const parsed = new URL(url);
+    const isSupabasePooler = parsed.hostname.includes("pooler.supabase.com");
+    const sslConfig = isSupabasePooler ? { rejectUnauthorized: false } : undefined;
+    return {
+      host: parsed.hostname,
+      port: parsed.port ? parseInt(parsed.port, 10) : 5432,
+      user: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password),
+      database: parsed.pathname.replace(/^\//, ""),
+      ssl: sslConfig,
+      max: isSupabasePooler ? 1 : 10,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
+    };
+  } catch {
+    return { connectionString: url };
+  }
+}
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ...(isSupabase && isProduction
-    ? {
-        ssl: { rejectUnauthorized: false },
-        max: 1,
-        idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 10000,
-      }
-    : {}),
-});
+export const pool = new Pool(parseConnectionString(process.env.DATABASE_URL));
 
 export const db = drizzle(pool, { schema });
 
