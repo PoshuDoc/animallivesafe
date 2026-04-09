@@ -1,6 +1,6 @@
 import { Navbar } from "./Navbar";
 import { Link } from "wouter";
-import { Stethoscope, MapPin, Phone, Mail, Facebook, Youtube } from "lucide-react";
+import { Stethoscope, MapPin, Phone, Mail, Facebook, Youtube, Twitter, Instagram, Linkedin, MessageCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
@@ -8,9 +8,33 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+type SocialLink = { platform: string; url: string; label: string };
+
+const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  facebook: Facebook,
+  youtube: Youtube,
+  twitter: Twitter,
+  instagram: Instagram,
+  linkedin: Linkedin,
+  whatsapp: MessageCircle,
+};
+
+const DEFAULT_SOCIAL: SocialLink[] = [
+  { platform: "facebook", url: "#", label: "ফেসবুক" },
+  { platform: "youtube", url: "#", label: "ইউটিউব" },
+];
+
 export function Layout({ children }: LayoutProps) {
   const { data: sc = {} } = useSiteContent();
   const c = (key: string, fallback: string) => sc[key] || fallback;
+
+  let socialLinks: SocialLink[] = DEFAULT_SOCIAL;
+  try {
+    const raw = sc["footer_social_links"];
+    if (raw) socialLinks = JSON.parse(raw);
+  } catch {
+    // keep default
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground font-sans">
@@ -35,14 +59,26 @@ export function Layout({ children }: LayoutProps) {
               <p className="text-muted-foreground text-sm leading-relaxed mb-5">
                 {c("footer_tagline", "বাংলাদেশের কৃষক ও পশুপালকদের জন্য বিশ্বস্ত ভেটেরিনারি সেবা প্ল্যাটফর্ম।")}
               </p>
-              <div className="flex gap-3">
-                <a href="#" className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" data-testid="link-facebook" aria-label="Facebook">
-                  <Facebook className="h-4 w-4" />
-                </a>
-                <a href="#" className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" data-testid="link-youtube" aria-label="YouTube">
-                  <Youtube className="h-4 w-4" />
-                </a>
-              </div>
+              {socialLinks.length > 0 && (
+                <div className="flex gap-3 flex-wrap">
+                  {socialLinks.map((link, idx) => {
+                    const Icon = PLATFORM_ICONS[link.platform] ?? Facebook;
+                    return (
+                      <a
+                        key={idx}
+                        href={link.url || "#"}
+                        target={link.url && link.url !== "#" ? "_blank" : undefined}
+                        rel="noopener noreferrer"
+                        className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        data-testid={`link-${link.platform}`}
+                        aria-label={link.label}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Quick Links */}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { PAGE_DEFAULTS } from "@/lib/pageDefaults";
 
 export default function Mission() {
   const { data: sc = {} } = useSiteContent();
@@ -30,7 +31,7 @@ export default function Mission() {
           <div
             className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-muted-foreground prose-li:text-muted-foreground prose-h2:text-2xl prose-h3:text-xl prose-h2:mt-8 prose-h3:mt-6"
             dangerouslySetInnerHTML={{
-              __html: c("page_mission_content", "<p>আমাদের মিশন সম্পর্কে তথ্য শীঘ্রই যোগ করা হবে।</p>"),
+              __html: c("page_mission_content", PAGE_DEFAULTS.mission),
             }}
           />
         </div>

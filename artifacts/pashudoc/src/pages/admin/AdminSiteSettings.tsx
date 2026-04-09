@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Navigation, Layout, FileText, Globe, Save } from "lucide-react";
+import { Settings, Navigation, Layout, FileText, Globe, Save, Plus, Trash2, ExternalLink } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { PAGE_DEFAULTS } from "@/lib/pageDefaults";
 
 const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
@@ -18,6 +19,11 @@ function apiFetch(path: string, opts?: RequestInit) {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(opts?.headers ?? {}) },
   }).then(r => r.json());
 }
+
+const DEFAULT_SOCIAL_LINKS = JSON.stringify([
+  { platform: "facebook", url: "https://facebook.com/pashudoc", label: "ফেসবুক" },
+  { platform: "youtube", url: "https://youtube.com/pashudoc", label: "ইউটিউব" },
+]);
 
 const DEFAULTS: Record<string, string> = {
   navbar_brand_name: "পশুডক",
@@ -30,6 +36,7 @@ const DEFAULTS: Record<string, string> = {
   footer_email: "support@pashudoc.com",
   footer_address: "ঢাকা, বাংলাদেশ",
   footer_copyright: "© ২০২৫ পশুডক। সর্বস্বত্ব সংরক্ষিত।",
+  footer_social_links: DEFAULT_SOCIAL_LINKS,
   landing_hero_badge: "বাংলাদেশের কৃষকদের আস্থার প্রতীক",
   landing_hero_title: "আপনার গবাদি পশুর জন্য সেরা ডাক্তার খুঁজুন",
   landing_hero_subtitle: "ঘরে বসেই আপনার জেলার অভিজ্ঞ ভেটেরিনারি ডাক্তারদের খুঁজুন এবং অ্যাপয়েন্টমেন্ট বুক করুন।",
@@ -54,7 +61,7 @@ const DEFAULTS: Record<string, string> = {
   about_hero_badge: "আমাদের সম্পর্কে",
   about_hero_title: "পশুডক — কৃষকের পাশে থাকার প্রতিশ্রুতি",
   about_hero_subtitle: "বাংলাদেশের কোটি কৃষকের পশু সম্পদ রক্ষায় আমরা কাজ করছি।",
-  page_about_content: "<h2>আমাদের সম্পর্কে</h2><p>পশুডক বাংলাদেশের কৃষকদের জন্য একটি বিশ্বস্ত ডিজিটাল প্ল্যাটফর্ম।</p>",
+  page_about_content: PAGE_DEFAULTS.about,
   contact_hero_badge: "যোগাযোগ করুন",
   contact_hero_title: "আমরা আপনার পাশে আছি",
   contact_hero_subtitle: "যেকোনো সমস্যা, প্রশ্ন বা পরামর্শের জন্য আমাদের সাথে যোগাযোগ করুন।",
@@ -63,14 +70,25 @@ const DEFAULTS: Record<string, string> = {
   mission_hero_badge: "আমাদের মিশন",
   mission_hero_title: "বাংলাদেশের প্রতিটি পশুর জন্য সঠিক চিকিৎসা নিশ্চিত করা",
   mission_hero_subtitle: "কোটি কৃষকের পশু সম্পদ রক্ষায় ডিজিটাল প্রযুক্তিকে কাজে লাগিয়ে সহজলভ্য সেবা গড়ে তোলা।",
-  page_mission_content: "<h2>আমাদের মিশন</h2><p>বাংলাদেশের প্রতিটি কৃষকের কাছে মানসম্পন্ন পশু চিকিৎসা সেবা পৌঁছে দেওয়া।</p>",
+  page_mission_content: PAGE_DEFAULTS.mission,
   privacy_hero_title: "গোপনীয়তা নীতি",
   privacy_hero_subtitle: "পশুডক আপনার গোপনীয়তাকে সর্বোচ্চ গুরুত্ব দেয়।",
-  page_privacy_content: "<h2>গোপনীয়তা নীতি</h2><p>আপনার ব্যক্তিগত তথ্য আমাদের কাছে সুরক্ষিত।</p>",
+  page_privacy_content: PAGE_DEFAULTS.privacy,
   terms_hero_title: "ব্যবহারের শর্তাবলী",
   terms_hero_subtitle: "পশুডক ব্যবহার করার আগে অনুগ্রহ করে এই শর্তাবলী পড়ুন।",
-  page_terms_content: "<h2>ব্যবহারের শর্তাবলী</h2><p>পশুডক ব্যবহার করে আপনি এই শর্তাবলী মেনে চলতে সম্মত হচ্ছেন।</p>",
+  page_terms_content: PAGE_DEFAULTS.terms,
 };
+
+type SocialLink = { platform: string; url: string; label: string };
+
+const PLATFORM_OPTIONS = [
+  { value: "facebook", label: "ফেসবুক" },
+  { value: "youtube", label: "ইউটিউব" },
+  { value: "twitter", label: "টুইটার / X" },
+  { value: "instagram", label: "ইনস্টাগ্রাম" },
+  { value: "linkedin", label: "লিংকডইন" },
+  { value: "whatsapp", label: "হোয়াটসঅ্যাপ" },
+];
 
 export function AdminSiteSettings() {
   const { toast } = useToast();
@@ -83,10 +101,23 @@ export function AdminSiteSettings() {
   });
 
   const [content, setContent] = useState<Record<string, string>>(() => ({ ...DEFAULTS }));
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(() => {
+    try { return JSON.parse(DEFAULT_SOCIAL_LINKS); } catch { return []; }
+  });
 
   useEffect(() => {
     if (isFetched) {
-      setContent({ ...DEFAULTS, ...(savedContent ?? {}) });
+      const merged = { ...DEFAULTS };
+      for (const [k, v] of Object.entries(savedContent ?? {})) {
+        if (v !== "" && v !== null && v !== undefined) merged[k] = v as string;
+      }
+      setContent(merged);
+      try {
+        const raw = merged.footer_social_links;
+        if (raw) setSocialLinks(JSON.parse(raw));
+      } catch {
+        // keep default
+      }
     }
   }, [savedContent, isFetched]);
 
@@ -113,6 +144,32 @@ export function AdminSiteSettings() {
   const saveSection = (keys: string[]) => {
     const updates = Object.fromEntries(keys.map(k => [k, content[k] ?? ""]));
     saveMutation.mutate(updates);
+  };
+
+  const saveSocialLinks = () => {
+    const value = JSON.stringify(socialLinks);
+    setContent(prev => ({ ...prev, footer_social_links: value }));
+    saveMutation.mutate({ footer_social_links: value });
+  };
+
+  const addSocialLink = () => {
+    setSocialLinks(prev => [...prev, { platform: "facebook", url: "", label: "ফেসবুক" }]);
+  };
+
+  const updateSocialLink = (idx: number, field: keyof SocialLink, value: string) => {
+    setSocialLinks(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      if (field === "platform") {
+        const opt = PLATFORM_OPTIONS.find(o => o.value === value);
+        if (opt) next[idx].label = opt.label;
+      }
+      return next;
+    });
+  };
+
+  const removeSocialLink = (idx: number) => {
+    setSocialLinks(prev => prev.filter((_, i) => i !== idx));
   };
 
   if (isLoading) {
@@ -161,21 +218,89 @@ export function AdminSiteSettings() {
 
         {/* ─── Footer ──────────────────────────────────────── */}
         <TabsContent value="footer" className="mt-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">ফুটার সম্পাদনা</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <Field label="ট্যাগলাইন" value={content.footer_tagline ?? ""} onChange={v => set("footer_tagline", v)} />
+          <div className="space-y-4">
+            {/* Basic Info */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">ফুটার সম্পাদনা</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <Field label="ট্যাগলাইন" value={content.footer_tagline ?? ""} onChange={v => set("footer_tagline", v)} />
+                  </div>
+                  <Field label="ফোন নম্বর" value={content.footer_phone ?? ""} onChange={v => set("footer_phone", v)} />
+                  <Field label="ইমেইল" value={content.footer_email ?? ""} onChange={v => set("footer_email", v)} />
+                  <Field label="ঠিকানা" value={content.footer_address ?? ""} onChange={v => set("footer_address", v)} />
+                  <Field label="কপিরাইট লেখা" value={content.footer_copyright ?? ""} onChange={v => set("footer_copyright", v)} />
                 </div>
-                <Field label="ফোন নম্বর" value={content.footer_phone ?? ""} onChange={v => set("footer_phone", v)} />
-                <Field label="ইমেইল" value={content.footer_email ?? ""} onChange={v => set("footer_email", v)} />
-                <Field label="ঠিকানা" value={content.footer_address ?? ""} onChange={v => set("footer_address", v)} />
-                <Field label="কপিরাইট লেখা" value={content.footer_copyright ?? ""} onChange={v => set("footer_copyright", v)} />
-              </div>
-              <SaveButton onClick={() => saveSection(["footer_tagline","footer_phone","footer_email","footer_address","footer_copyright"])} loading={saveMutation.isPending} />
-            </CardContent>
-          </Card>
+                <SaveButton onClick={() => saveSection(["footer_tagline","footer_phone","footer_email","footer_address","footer_copyright"])} loading={saveMutation.isPending} />
+              </CardContent>
+            </Card>
+
+            {/* Social Links */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">সোশ্যাল মিডিয়া লিঙ্ক</CardTitle>
+                  <Button size="sm" variant="outline" onClick={addSocialLink} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> নতুন যোগ করুন
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {socialLinks.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm border border-dashed rounded-lg">
+                    কোনো সোশ্যাল লিঙ্ক নেই। উপরের বাটন থেকে যোগ করুন।
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {socialLinks.map((link, idx) => (
+                      <div key={idx} className="flex gap-3 items-start p-3 border rounded-lg bg-muted/20">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">প্ল্যাটফর্ম</Label>
+                            <select
+                              value={link.platform}
+                              onChange={e => updateSocialLink(idx, "platform", e.target.value)}
+                              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                            >
+                              {PLATFORM_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1 sm:col-span-2">
+                            <Label className="text-xs text-muted-foreground">লিঙ্ক (URL)</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                value={link.url}
+                                onChange={e => updateSocialLink(idx, "url", e.target.value)}
+                                placeholder="https://facebook.com/..."
+                                className="text-sm flex-1"
+                              />
+                              {link.url && (
+                                <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center px-2 text-muted-foreground hover:text-primary">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0 mt-5"
+                          onClick={() => removeSocialLink(idx)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <SaveButton onClick={saveSocialLinks} loading={saveMutation.isPending} />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* ─── Landing Page ────────────────────────────────── */}

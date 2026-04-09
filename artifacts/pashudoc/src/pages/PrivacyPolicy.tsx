@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { PAGE_DEFAULTS } from "@/lib/pageDefaults";
 
 export default function PrivacyPolicy() {
   const { data: sc = {} } = useSiteContent();
@@ -33,7 +34,7 @@ export default function PrivacyPolicy() {
           <div
             className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-muted-foreground prose-li:text-muted-foreground prose-h2:text-2xl prose-h3:text-xl prose-h2:mt-8 prose-h3:mt-6"
             dangerouslySetInnerHTML={{
-              __html: c("page_privacy_content", "<p>গোপনীয়তা নীতি শীঘ্রই যোগ করা হবে।</p>"),
+              __html: c("page_privacy_content", PAGE_DEFAULTS.privacy),
             }}
           />
         </div>
