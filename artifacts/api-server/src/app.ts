@@ -4,6 +4,9 @@ import pinoHttp from "pino-http";
 import path from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { pool } from "@workspace/db";
+
+export { pool };
 
 const app: Express = express();
 

@@ -126,14 +126,14 @@ export default function AdminDashboard() {
             </div>
 
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-              {section === "overview" && <OverviewSection />}
-              {section === "revenue" && <AdminRevenue />}
-              {section === "doctor-list" && <AdminDoctorList />}
-              {section === "approvals" && <ApprovalsSection />}
-              {section === "appointments" && <AppointmentsSection />}
-              {section === "users" && <UsersSection />}
-              {section === "faq" && <AdminFaq />}
-              {section === "site-settings" && <AdminSiteSettings />}
+              <div className={section !== "overview" ? "hidden" : ""}><OverviewSection /></div>
+              <div className={section !== "revenue" ? "hidden" : ""}><AdminRevenue /></div>
+              <div className={section !== "doctor-list" ? "hidden" : ""}><AdminDoctorList /></div>
+              <div className={section !== "approvals" ? "hidden" : ""}><ApprovalsSection /></div>
+              <div className={section !== "appointments" ? "hidden" : ""}><AppointmentsSection /></div>
+              <div className={section !== "users" ? "hidden" : ""}><UsersSection /></div>
+              <div className={section !== "faq" ? "hidden" : ""}><AdminFaq /></div>
+              <div className={section !== "site-settings" ? "hidden" : ""}><AdminSiteSettings /></div>
             </main>
           </div>
         </div>
