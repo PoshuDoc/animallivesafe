@@ -1,95 +1,14 @@
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { FileText } from "lucide-react";
-
-const sections = [
-  {
-    title: "১. সেবার বিবরণ",
-    content: [
-      "পশুডক একটি ডিজিটাল মধ্যস্থতাকারী প্ল্যাটফর্ম যা কৃষক/পশুর মালিক এবং ভেটেরিনারি ডাক্তারদের মধ্যে সংযোগ স্থাপন করে।",
-      "পশুডক নিজে কোনো চিকিৎসাসেবা প্রদান করে না — আমরা কেবল যোগাযোগের সুবিধা দিই।",
-      "প্ল্যাটফর্মে প্রদত্ত চিকিৎসা পরামর্শের দায়িত্ব সম্পূর্ণ সংশ্লিষ্ট ডাক্তারের।",
-    ],
-  },
-  {
-    title: "২. অ্যাকাউন্ট নিবন্ধন",
-    content: [
-      "নিবন্ধনের সময় আপনাকে সঠিক ও হালনাগাদ তথ্য প্রদান করতে হবে।",
-      "একটি মোবাইল নম্বর দিয়ে একটিমাত্র অ্যাকাউন্ট খোলা যাবে।",
-      "আপনার অ্যাকাউন্টের পাসওয়ার্ড গোপন রাখা আপনার দায়িত্ব।",
-      "অ্যাকাউন্টের অপব্যবহার হলে অবিলম্বে আমাদের জানান।",
-      "১৮ বছরের কম বয়সীরা অভিভাবকের তত্ত্বাবধানে অ্যাকাউন্ট ব্যবহার করতে পারবেন।",
-    ],
-  },
-  {
-    title: "৩. কৃষক ও পশুর মালিকদের জন্য নিয়ম",
-    content: [
-      "অ্যাপয়েন্টমেন্ট বুক করার পর নিশ্চিত না করে বারবার বাতিল করা থেকে বিরত থাকুন।",
-      "ডাক্তারের সাথে সঠিক ও সম্পূর্ণ তথ্য শেয়ার করুন।",
-      "পশুর সমস্যার সঠিক বিবরণ দিন — মিথ্যা তথ্য দিলে সঠিক চিকিৎসা পাওয়া সম্ভব নয়।",
-      "রিভিউ দেওয়ার সময় সৎ ও সম্মানজনক ভাষা ব্যবহার করুন।",
-    ],
-  },
-  {
-    title: "৪. ডাক্তারদের জন্য নিয়ম",
-    content: [
-      "শুধুমাত্র বৈধ ভেটেরিনারি ডিগ্রিধারী ডাক্তাররা নিবন্ধন করতে পারবেন।",
-      "সার্টিফিকেট যাচাই না হওয়া পর্যন্ত প্রোফাইল সার্চে দেখাবে না।",
-      "অ্যাপয়েন্টমেন্ট গ্রহণের পর যথাসম্ভব সময়মতো সেবা প্রদান করতে হবে।",
-      "পশুর চিকিৎসায় দেওয়া পরামর্শের সম্পূর্ণ পেশাদার দায়িত্ব ডাক্তারের।",
-      "মিথ্যা যোগ্যতা বা অভিজ্ঞতার তথ্য দিলে অ্যাকাউন্ট বাতিল করা হবে।",
-    ],
-  },
-  {
-    title: "৫. পেমেন্ট ও ফি",
-    content: [
-      "কৃষকদের জন্য প্ল্যাটফর্ম ব্যবহার সম্পূর্ণ বিনামূল্যে।",
-      "ডাক্তারের পরামর্শ ফি সরাসরি ডাক্তারকে দিতে হবে — পশুডক কোনো কমিশন নেয় না।",
-      "ফিচার্ড ও প্রিমিয়াম লিস্টিংয়ের জন্য ডাক্তারদের সাবস্ক্রিপশন ফি প্রযোজ্য হতে পারে।",
-      "সাবস্ক্রিপশন বাতিল করলে মেয়াদ শেষ হওয়া পর্যন্ত সেবা পাওয়া যাবে।",
-    ],
-  },
-  {
-    title: "৬. নিষিদ্ধ কার্যকলাপ",
-    content: [
-      "মিথ্যা বা বিভ্রান্তিকর তথ্য প্রদান করা।",
-      "অন্য ব্যবহারকারীকে হয়রানি বা অপমান করা।",
-      "প্ল্যাটফর্মের বাইরে ব্যবহারকারীর ব্যক্তিগত তথ্য ব্যবহার করা।",
-      "স্প্যাম বা অটোমেটেড বট দিয়ে প্ল্যাটফর্ম ব্যবহার করা।",
-      "ভুয়া রিভিউ বা রেটিং দেওয়া।",
-    ],
-  },
-  {
-    title: "৭. দায়বদ্ধতার সীমা",
-    content: [
-      "পশুডক চিকিৎসার ফলাফলের জন্য দায়ী নয় — এটি সম্পূর্ণ ডাক্তারের দায়িত্ব।",
-      "ইন্টারনেট সংযোগজনিত সমস্যার কারণে সেবা বিঘ্নিত হলে পশুডক দায়ী নয়।",
-      "তৃতীয় পক্ষের (ডাক্তার) কার্যকলাপের জন্য পশুডক সরাসরি দায়ী নয়।",
-    ],
-  },
-  {
-    title: "৮. অ্যাকাউন্ট বাতিল",
-    content: [
-      "শর্তাবলী লঙ্ঘন করলে বিনা নোটিশে অ্যাকাউন্ট বাতিল করার অধিকার পশুডকের আছে।",
-      "আপনি নিজেও যেকোনো সময় অ্যাকাউন্ট মুছে ফেলার অনুরোধ করতে পারবেন।",
-      "অ্যাকাউন্ট বাতিলের পরে আপনার তথ্য ৩০ দিনের মধ্যে মুছে ফেলা হবে।",
-    ],
-  },
-  {
-    title: "৯. প্রযোজ্য আইন",
-    content: [
-      "এই শর্তাবলী বাংলাদেশের প্রচলিত আইন অনুযায়ী পরিচালিত।",
-      "যেকোনো বিরোধ বাংলাদেশের যোগ্য আদালতে নিষ্পত্তি হবে।",
-      "তথ্য ও যোগাযোগ প্রযুক্তি আইন ২০০৬ এবং ডিজিটাল নিরাপত্তা আইন ২০১৮ প্রযোজ্য।",
-    ],
-  },
-];
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export default function TermsOfUse() {
+  const { data: sc = {} } = useSiteContent();
+  const c = (key: string, fallback: string) => sc[key] || fallback;
+
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-primary/5 py-16 border-b border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex justify-center mb-5">
@@ -100,33 +19,23 @@ export default function TermsOfUse() {
           <Badge variant="outline" className="mb-4 border-primary text-primary bg-primary/5 px-4 py-1 text-sm font-medium">
             আইনি তথ্য
           </Badge>
-          <h1 className="text-4xl font-bold text-foreground mb-4">ব্যবহারের শর্তাবলী</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            {c("terms_hero_title", "ব্যবহারের শর্তাবলী")}
+          </h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            পশুডক ব্যবহার করার মাধ্যমে আপনি এই শর্তাবলীতে সম্মত হচ্ছেন। অনুগ্রহ করে পুরো নীতিমালা মনোযোগ দিয়ে পড়ুন।
+            {c("terms_hero_subtitle", "পশুডক ব্যবহার করার আগে অনুগ্রহ করে এই শর্তাবলী পড়ুন।")}
           </p>
-          <p className="text-sm text-muted-foreground mt-4">সর্বশেষ আপডেট: ৮ এপ্রিল, ২০২৬</p>
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-16 bg-background">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-10">
-            {sections.map((section, idx) => (
-              <div key={idx}>
-                <h2 className="text-xl font-bold text-foreground mb-4">{section.title}</h2>
-                <ul className="space-y-3">
-                  {section.content.map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-muted-foreground leading-relaxed">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary shrink-0"></span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                {idx < sections.length - 1 && <Separator className="mt-10" />}
-              </div>
-            ))}
-          </div>
+          <div
+            className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-muted-foreground prose-li:text-muted-foreground prose-h2:text-2xl prose-h3:text-xl prose-h2:mt-8 prose-h3:mt-6"
+            dangerouslySetInnerHTML={{
+              __html: c("page_terms_content", "<p>শর্তাবলী শীঘ্রই যোগ করা হবে।</p>"),
+            }}
+          />
         </div>
       </section>
     </Layout>

@@ -51,11 +51,25 @@ const DEFAULTS: Record<string, string> = {
   landing_stats_doctors: "৫০০+",
   landing_stats_districts: "৬৪",
   landing_stats_farmers: "১০,০০০+",
-  page_about_content: "<h2>আমাদের সম্পর্কে</h2><p>পশুডক বাংলাদেশের কৃষকদের জন্য একটি বিশ্বস্ত ডিজিটাল প্ল্যাটফর্ম যা সারা দেশের অভিজ্ঞ ভেটেরিনারি চিকিৎসকদের সাথে সংযুক্ত করে।</p>",
-  page_contact_content: "<h2>যোগাযোগ করুন</h2><p>আমাদের সাথে যোগাযোগ করতে নিচের তথ্য ব্যবহার করুন।</p>",
+  about_hero_badge: "আমাদের সম্পর্কে",
+  about_hero_title: "পশুডক — কৃষকের পাশে থাকার প্রতিশ্রুতি",
+  about_hero_subtitle: "বাংলাদেশের কোটি কৃষকের পশু সম্পদ রক্ষায় আমরা কাজ করছি।",
+  page_about_content: "<h2>আমাদের সম্পর্কে</h2><p>পশুডক বাংলাদেশের কৃষকদের জন্য একটি বিশ্বস্ত ডিজিটাল প্ল্যাটফর্ম।</p>",
+  contact_hero_badge: "যোগাযোগ করুন",
+  contact_hero_title: "আমরা আপনার পাশে আছি",
+  contact_hero_subtitle: "যেকোনো সমস্যা, প্রশ্ন বা পরামর্শের জন্য আমাদের সাথে যোগাযোগ করুন।",
+  contact_helpline_note: "সকাল ৮টা — রাত ৮টা (সপ্তাহের ৭ দিন)",
+  page_contact_content: "",
+  mission_hero_badge: "আমাদের মিশন",
+  mission_hero_title: "বাংলাদেশের প্রতিটি পশুর জন্য সঠিক চিকিৎসা নিশ্চিত করা",
+  mission_hero_subtitle: "কোটি কৃষকের পশু সম্পদ রক্ষায় ডিজিটাল প্রযুক্তিকে কাজে লাগিয়ে সহজলভ্য সেবা গড়ে তোলা।",
+  page_mission_content: "<h2>আমাদের মিশন</h2><p>বাংলাদেশের প্রতিটি কৃষকের কাছে মানসম্পন্ন পশু চিকিৎসা সেবা পৌঁছে দেওয়া।</p>",
+  privacy_hero_title: "গোপনীয়তা নীতি",
+  privacy_hero_subtitle: "পশুডক আপনার গোপনীয়তাকে সর্বোচ্চ গুরুত্ব দেয়।",
   page_privacy_content: "<h2>গোপনীয়তা নীতি</h2><p>আপনার ব্যক্তিগত তথ্য আমাদের কাছে সুরক্ষিত।</p>",
+  terms_hero_title: "ব্যবহারের শর্তাবলী",
+  terms_hero_subtitle: "পশুডক ব্যবহার করার আগে অনুগ্রহ করে এই শর্তাবলী পড়ুন।",
   page_terms_content: "<h2>ব্যবহারের শর্তাবলী</h2><p>পশুডক ব্যবহার করে আপনি এই শর্তাবলী মেনে চলতে সম্মত হচ্ছেন।</p>",
-  page_mission_content: "<h2>আমাদের লক্ষ্য</h2><p>বাংলাদেশের প্রতিটি কৃষকের কাছে মানসম্পন্ন পশু চিকিৎসা সেবা পৌঁছে দেওয়া।</p>",
 };
 
 export function AdminSiteSettings() {
@@ -266,30 +280,114 @@ export function AdminSiteSettings() {
               ))}
             </TabsList>
 
-            {[
-              { value: "about", key: "page_about_content", label: "আমাদের সম্পর্কে" },
-              { value: "contact", key: "page_contact_content", label: "যোগাযোগ পেজ" },
-              { value: "privacy", key: "page_privacy_content", label: "গোপনীয়তা নীতি" },
-              { value: "terms", key: "page_terms_content", label: "শর্তাবলী পেজ" },
-              { value: "mission", key: "page_mission_content", label: "আমাদের লক্ষ্য পেজ" },
-            ].map(({ value, key, label }) => (
-              <TabsContent key={value} value={value}>
+            {/* About */}
+            <TabsContent value="about">
+              <div className="space-y-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">{label} — সম্পাদনা</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">TipTap রিচ টেক্সট এডিটর দিয়ে কন্টেন্ট সম্পাদনা করুন</p>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="text-base">হিরো সেকশন — আমাদের সম্পর্কে</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
-                    <RichTextEditor
-                      key={isFetched ? `loaded-${key}` : `empty-${key}`}
-                      value={content[key] ?? ""}
-                      onChange={v => set(key, v)}
-                    />
-                    <SaveButton onClick={() => saveSection([key])} loading={saveMutation.isPending} />
+                    <Field label="ব্যাজ" value={content.about_hero_badge ?? ""} onChange={v => set("about_hero_badge", v)} />
+                    <Field label="পেজ শিরোনাম" value={content.about_hero_title ?? ""} onChange={v => set("about_hero_title", v)} />
+                    <Field label="সাবটাইটেল" value={content.about_hero_subtitle ?? ""} onChange={v => set("about_hero_subtitle", v)} />
+                    <SaveButton onClick={() => saveSection(["about_hero_badge","about_hero_title","about_hero_subtitle"])} loading={saveMutation.isPending} />
                   </CardContent>
                 </Card>
-              </TabsContent>
-            ))}
+                <Card>
+                  <CardHeader><CardTitle className="text-base">মূল কন্টেন্ট</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <RichTextEditor key={isFetched ? "loaded-about" : "empty-about"} value={content.page_about_content ?? ""} onChange={v => set("page_about_content", v)} />
+                    <SaveButton onClick={() => saveSection(["page_about_content"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Contact */}
+            <TabsContent value="contact">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader><CardTitle className="text-base">হিরো সেকশন — যোগাযোগ</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Field label="ব্যাজ" value={content.contact_hero_badge ?? ""} onChange={v => set("contact_hero_badge", v)} />
+                    <Field label="পেজ শিরোনাম" value={content.contact_hero_title ?? ""} onChange={v => set("contact_hero_title", v)} />
+                    <Field label="সাবটাইটেল" value={content.contact_hero_subtitle ?? ""} onChange={v => set("contact_hero_subtitle", v)} />
+                    <Field label="হেল্পলাইন নোট" value={content.contact_helpline_note ?? ""} onChange={v => set("contact_helpline_note", v)} />
+                    <SaveButton onClick={() => saveSection(["contact_hero_badge","contact_hero_title","contact_hero_subtitle","contact_helpline_note"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">অতিরিক্ত কন্টেন্ট (ঐচ্ছিক)</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <RichTextEditor key={isFetched ? "loaded-contact" : "empty-contact"} value={content.page_contact_content ?? ""} onChange={v => set("page_contact_content", v)} />
+                    <SaveButton onClick={() => saveSection(["page_contact_content"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Mission */}
+            <TabsContent value="mission">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader><CardTitle className="text-base">হিরো সেকশন — মিশন</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Field label="ব্যাজ" value={content.mission_hero_badge ?? ""} onChange={v => set("mission_hero_badge", v)} />
+                    <Field label="পেজ শিরোনাম" value={content.mission_hero_title ?? ""} onChange={v => set("mission_hero_title", v)} />
+                    <Field label="সাবটাইটেল" value={content.mission_hero_subtitle ?? ""} onChange={v => set("mission_hero_subtitle", v)} />
+                    <SaveButton onClick={() => saveSection(["mission_hero_badge","mission_hero_title","mission_hero_subtitle"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">মূল কন্টেন্ট</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <RichTextEditor key={isFetched ? "loaded-mission" : "empty-mission"} value={content.page_mission_content ?? ""} onChange={v => set("page_mission_content", v)} />
+                    <SaveButton onClick={() => saveSection(["page_mission_content"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Privacy */}
+            <TabsContent value="privacy">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader><CardTitle className="text-base">হিরো সেকশন — গোপনীয়তা নীতি</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Field label="পেজ শিরোনাম" value={content.privacy_hero_title ?? ""} onChange={v => set("privacy_hero_title", v)} />
+                    <Field label="সাবটাইটেল" value={content.privacy_hero_subtitle ?? ""} onChange={v => set("privacy_hero_subtitle", v)} />
+                    <SaveButton onClick={() => saveSection(["privacy_hero_title","privacy_hero_subtitle"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">মূল কন্টেন্ট</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <RichTextEditor key={isFetched ? "loaded-privacy" : "empty-privacy"} value={content.page_privacy_content ?? ""} onChange={v => set("page_privacy_content", v)} />
+                    <SaveButton onClick={() => saveSection(["page_privacy_content"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Terms */}
+            <TabsContent value="terms">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader><CardTitle className="text-base">হিরো সেকশন — শর্তাবলী</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Field label="পেজ শিরোনাম" value={content.terms_hero_title ?? ""} onChange={v => set("terms_hero_title", v)} />
+                    <Field label="সাবটাইটেল" value={content.terms_hero_subtitle ?? ""} onChange={v => set("terms_hero_subtitle", v)} />
+                    <SaveButton onClick={() => saveSection(["terms_hero_title","terms_hero_subtitle"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">মূল কন্টেন্ট</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <RichTextEditor key={isFetched ? "loaded-terms" : "empty-terms"} value={content.page_terms_content ?? ""} onChange={v => set("page_terms_content", v)} />
+                    <SaveButton onClick={() => saveSection(["page_terms_content"])} loading={saveMutation.isPending} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
           </Tabs>
         </TabsContent>
       </Tabs>
